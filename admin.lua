@@ -1,4 +1,4 @@
--- Mgby V9 - Painel Admin + ESP Jogadores + ESP Pets
+-- Mgby V8 - Painel Admin com ESP Jogadores e Pets
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -11,30 +11,44 @@ local commands = {"rocket","ragdoll","balloon","inverse","nightvision","jail","j
 
 -- Lista de pets para ESP
 local petsToShow = {
-    "Ketchuru and Musturu","Strawberry Elephant","Ketupat Kepat","La Supreme Combinasion",
-    "Tralaledon","Celularcini Viciosini","Los Noo My Hotspotsitos","Spaghetti Tualetti",
-    "Esok Sekolah","Los Hotspotsitos","Dragon Cannelloni","Chicleteira Bicicleteira",
-    "La Extinct Grande","Garama and Madundung","Nuclearo Dinossauro","Graipuss Medussi",
-    "Celularcini Viciosini","Los Combinasionas","La Grande Combinasion"
+    "Ketchuru and Musturu",
+    "Strawberry Elephant",
+    "Ketupat Kepat",
+    "La Supreme Combinasion",
+    "Tralaledon",
+    "Celularcini Viciosini",
+    "Los Noo My Hotspotsitos",
+    "Spaghetti Tualetti",
+    "Esok Sekolah",
+    "Los Hotspotsitos",
+    "Dragon Cannelloni",
+    "Chicleteira Bicicleteira",
+    "La Extinct Grande",
+    "Garama and Madundung",
+    "Nuclearo Dinossauro",
+    "Graipuss Medussi",
+    "Celularcini Viciosini",
+    "Los Combinasionas",
+    "La Grande Combinasion",
 }
 
--- LocalPlayer
+-- Espera LocalPlayer e PlayerGui
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui",10)
 if not PlayerGui then warn("PlayerGui não carregou a tempo") return end
 
--- RemoteEvent
+-- Espera RemoteEvent
 local NetPackage = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net")
 local ExecuteCommand = NetPackage:WaitForChild("RE/AdminPanelService/ExecuteCommand")
 
--- Criar ScreenGui
+-- Cria ScreenGui
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "MgbyAdminPanel"
+screenGui.Name = "AlwaysVisibleAdminPanel"
 screenGui.Parent = PlayerGui
 
--- Frame principal
+-- Frame principal centralizado
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,250,0,500)
+frame.Size = UDim2.new(0,250,0,450)
 frame.AnchorPoint = Vector2.new(0.5,0.5)
 frame.Position = UDim2.new(0.5,0,0.5,0)
 frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
@@ -49,10 +63,10 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V9"
+title.Text = "Mgby V8"
 title.TextColor3 = Color3.fromRGB(144,238,144)
-title.Font = Enum.Font.GothamBold
 title.TextScaled = true
+title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
 -- Tornar frame arrastável
@@ -62,36 +76,27 @@ do
         local delta = input.Position - mousePos
         frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
     end
-
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             mousePos = input.Position
             framePos = frame.Position
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
             end)
         end
     end)
-
     frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
+        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
     end)
-
     UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            update(input)
-        end
+        if input == dragInput and dragging then update(input) end
     end)
 end
 
--- ScrollingFrame para players
+-- ScrollingFrame para botões de players
 local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1,0,1,-200)
+scrollFrame.Size = UDim2.new(1,0,1,-150)
 scrollFrame.Position = UDim2.new(0,0,0,150)
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.ScrollBarThickness = 6
@@ -109,7 +114,7 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     scrollFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
 end)
 
--- BOTÃO ESP JOGADORES
+-- ESP Jogadores
 local espEnabled = false
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
@@ -132,17 +137,14 @@ local function createHighlight(char)
         highlight.Parent = char
     end
 end
-
 local function removeHighlight(char)
     local highlight = char:FindFirstChild("ESP_Highlight")
     if highlight then highlight:Destroy() end
 end
-
 local function toggleESP()
     espEnabled = not espEnabled
     espButton.Text = espEnabled and "ESP ON" or "ESP OFF"
     espButton.TextColor3 = espEnabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
-
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
             if espEnabled then createHighlight(player.Character) else removeHighlight(player.Character) end
@@ -154,7 +156,7 @@ local function toggleESP()
 end
 espButton.MouseButton1Click:Connect(toggleESP)
 
--- CRIAR BOTÕES PARA TODOS OS PLAYERS
+-- Criar botões para players
 local function createPlayerButton(targetPlayer)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
@@ -170,7 +172,6 @@ local function createPlayerButton(targetPlayer)
     corner.Parent = button
 
     local capturedPlayer = targetPlayer
-
     button.MouseButton1Click:Connect(function()
         task.spawn(function()
             for _, cmd in ipairs(commands) do
@@ -184,18 +185,31 @@ local function createPlayerButton(targetPlayer)
 end
 
 for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then createPlayerButton(player) end
+    if player ~= LocalPlayer then
+        createPlayerButton(player)
+    end
 end
 Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then createPlayerButton(player) end
+    if player ~= LocalPlayer then
+        createPlayerButton(player)
+    end
 end)
 
--- ESP PETS V8 - Nome + Geração + Highlight ciano
+-- ======================================
+-- ESP PETS (usando "Generation" TextLabel)
+-- ======================================
 local activeBillboards = {}
+
+local function parseNum(t)
+    t = t:gsub("[%$,]","")
+    local n,s = t:match("([%d%.]+)([KMB]?)")
+    n = tonumber(n) or 0
+    local mult={K=1e3,M=1e6,B=1e9}
+    return n*(mult[s] or 1)
+end
+
 local function createPetESP(pet)
     local id = pet:GetDebugId()
-    if activeBillboards[id] then activeBillboards[id]:Destroy() end
-
     -- Highlight ciano
     if not pet:FindFirstChild("Pet_Highlight") then
         local highlight = Instance.new("Highlight")
@@ -207,55 +221,62 @@ local function createPetESP(pet)
         highlight.Parent = pet
     end
 
-    -- Determinar cabeça
-    local head = pet:FindFirstChild("Head") or pet:FindFirstChild("HumanoidRootPart") or pet.PrimaryPart
-    if not head then return end
-
     -- Billboard
-    local bb = Instance.new("BillboardGui", CoreGui)
-    bb.Size = UDim2.new(0,200,0,50)
-    bb.Adornee = head
-    bb.AlwaysOnTop = true
-    bb.StudsOffset = Vector3.new(0,3,0)
+    local bb = activeBillboards[id]
+    if not bb then
+        bb = Instance.new("BillboardGui", CoreGui)
+        bb.Name = "PetESP_Billboard"
+        bb.Adornee = pet
+        bb.Size = UDim2.new(0,200,0,50)
+        bb.AlwaysOnTop = true
+        bb.StudsOffset = Vector3.new(0,4,0)
+        activeBillboards[id] = bb
 
-    local nameLabel = Instance.new("TextLabel", bb)
-    nameLabel.Size = UDim2.new(1,0,0.5,0)
-    nameLabel.BackgroundTransparency = 1
-    nameLabel.TextColor3 = Color3.fromRGB(255,255,0)
-    nameLabel.TextStrokeTransparency = 0
-    nameLabel.TextStrokeColor3 = Color3.new(0,0,0)
-    nameLabel.Font = Enum.Font.GothamBold
-    nameLabel.TextScaled = true
-    nameLabel.Text = pet.Name
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.Size = UDim2.new(1,0,0.5,0)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.TextColor3 = Color3.fromRGB(255,255,0)
+        nameLabel.TextStrokeTransparency = 0
+        nameLabel.TextStrokeColor3 = Color3.new(0,0,0)
+        nameLabel.Font = Enum.Font.GothamBold
+        nameLabel.TextScaled = true
+        nameLabel.Name = "NameLabel"
+        nameLabel.Text = pet.Name
+        nameLabel.Parent = bb
 
-    local genLabel = Instance.new("TextLabel", bb)
-    genLabel.Size = UDim2.new(1,0,0.5,0)
-    genLabel.Position = UDim2.new(0,0,0.5,0)
-    genLabel.BackgroundTransparency = 1
-    genLabel.TextColor3 = Color3.fromRGB(255,255,255)
-    genLabel.TextStrokeTransparency = 0
-    genLabel.TextStrokeColor3 = Color3.new(0,0,0)
-    genLabel.Font = Enum.Font.GothamBold
-    genLabel.TextScaled = true
-    -- Pega a geração correta
-    local genValue = pet:GetAttribute("Generation") or 0
-    genLabel.Text = tostring(genValue).."/s"
+        local genLabel = Instance.new("TextLabel")
+        genLabel.Size = UDim2.new(1,0,0.5,0)
+        genLabel.Position = UDim2.new(0,0,0.5,0)
+        genLabel.BackgroundTransparency = 1
+        genLabel.TextColor3 = Color3.fromRGB(255,255,255)
+        genLabel.TextStrokeTransparency = 0
+        genLabel.TextStrokeColor3 = Color3.new(0,0,0)
+        genLabel.Font = Enum.Font.GothamBold
+        genLabel.TextScaled = true
+        genLabel.Name = "GenLabel"
+        genLabel.Text = "0/s"
+        genLabel.Parent = bb
+    end
 
-    activeBillboards[id] = bb
+    -- Atualiza valor da geração
+    local genTextLabel = pet:FindFirstChild("Generation")
+    if genTextLabel and genTextLabel:IsA("TextLabel") then
+        local value = parseNum(genTextLabel.Text)
+        bb:FindFirstChild("GenLabel").Text = tostring(value).."/s"
+    end
 end
 
--- Loop para atualizar ESP pets
+-- Atualiza ESP pets em tempo real
 RunService.Heartbeat:Connect(function()
     for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("Model") and table.find(petsToShow, obj.Name) then
+        if obj:IsA("Model") and table.find(petsToShow,obj.Name) then
             createPetESP(obj)
         end
     end
 end)
 
--- Detecta pets que entram no workspace
 Workspace.DescendantAdded:Connect(function(obj)
-    if obj:IsA("Model") and table.find(petsToShow, obj.Name) then
+    if obj:IsA("Model") and table.find(petsToShow,obj.Name) then
         task.defer(function()
             createPetESP(obj)
         end)
