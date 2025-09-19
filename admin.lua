@@ -1,12 +1,14 @@
--- Mgby V1
+-- Mgby V1 Compatível
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
 
+-- Lista de comandos
 local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
 
--- Pets para ESP
+-- Lista de pets para ESP
 local petsToShow = {
     "Ketchuru and Musturu",
     "Strawberry Elephant",
@@ -28,23 +30,28 @@ local petsToShow = {
     "Los Combinasionas"
 }
 
+-- LocalPlayer
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui",10)
-if not PlayerGui then warn("PlayerGui não carregou a tempo") return end
 
-local NetPackage = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net")
-local ExecuteCommand = NetPackage:WaitForChild("RE/AdminPanelService/ExecuteCommand")
+-- Espera PlayerGui existir
+local PlayerGui
+repeat
+    PlayerGui = LocalPlayer:FindFirstChild("PlayerGui")
+    task.wait()
+until PlayerGui
 
 -- ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AlwaysVisibleAdminPanel"
+screenGui.ResetOnSpawn = false
 screenGui.Parent = PlayerGui
 
 -- Frame principal centralizado
+local frameWidth, frameHeight = 250, 450
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,250,0,450)
-frame.Position = UDim2.new(0.5, -125, 0.5, -225) -- centralizado
-frame.BackgroundColor3 = Color3.fromRGB(0,0,0) -- painel preto
+frame.Size = UDim2.new(0, frameWidth, 0, frameHeight)
+frame.Position = UDim2.new(0.5, -frameWidth/2, 0.5, -frameHeight/2)
+frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
@@ -55,7 +62,6 @@ frameCorner.Parent = frame
 -- Drag do painel
 do
     local dragging, dragInput, mousePos, framePos
-
     local function update(input)
         local delta = input.Position - mousePos
         frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
@@ -102,7 +108,7 @@ local espEnabled = false
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
-espButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
+espButton.BackgroundColor3 = Color3.fromRGB(50,50,50) -- cinza escuro
 espButton.Font = Enum.Font.GothamBold
 espButton.TextScaled = true
 espButton.Parent = frame
@@ -118,6 +124,7 @@ local function updateESPButtonText()
 end
 updateESPButtonText()
 
+-- ESP jogadores
 local playerHighlights = {}
 local function updateESPForPlayer(player)
     if player.Character then
@@ -139,14 +146,6 @@ local function updateESPForPlayer(player)
                 playerHighlights[player] = nil
             end
         end
-    end
-end
-
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        player.CharacterAdded:Connect(function()
-            if espEnabled then updateESPForPlayer(player) end
-        end)
     end
 end
 
@@ -227,7 +226,6 @@ end)
 
 -- PETS ESP AUTOMÁTICO (nome + valor)
 local petsBillboards = {}
-
 local function createPetESP(pet)
     if petsBillboards[pet] then return end
     local valuePerSecond = pet:GetAttribute("ValuePerSecond") or 0
@@ -255,7 +253,7 @@ local function createPetESP(pet)
     valueLabel.BackgroundTransparency = 1
     valueLabel.TextScaled = true
     valueLabel.Font = Enum.Font.GothamBold
-    valueLabel.TextColor3 = Color3.fromRGB(255,255,255) -- branco
+    valueLabel.TextColor3 = Color3.fromRGB(255,255,255)
     valueLabel.Text = "Value: "..tostring(valuePerSecond).."/s"
     valueLabel.Parent = billboard
 
