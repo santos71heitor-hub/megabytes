@@ -1,4 +1,4 @@
--- Mgby V10 Ultra
+-- Mgby V10 Ultra (corrigido)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -47,7 +47,7 @@ screenGui.Parent = PlayerGui
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 250, 0, 450)
 frame.Position = UDim2.new(0, 1660, 0, 520)
-frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+frame.BackgroundColor3 = Color3.fromRGB(0,0,0) -- painel preto
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
@@ -62,7 +62,7 @@ title.BackgroundTransparency = 1
 title.Text = "Mgby V10 Ultra"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
-title.Font = Enum.Font.GothamBold
+title.Font = Enum.Font.GothamBold -- mais gordinho
 title.Parent = frame
 
 -- BOTÃO ESP JOGADORES
@@ -70,9 +70,10 @@ local espEnabled = false
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9, 0, 0, 30)
 espButton.Position = UDim2.new(0.05, 0, 0, 35)
-espButton.BackgroundColor3 = Color3.fromRGB(100,0,100) -- cinza escuro
+espButton.BackgroundColor3 = Color3.fromRGB(50,50,50) -- cinza escuro
 espButton.Text = "ESP OFF"
-espButton.Font = Enum.Font.Gotham
+espButton.TextColor3 = Color3.fromRGB(255,255,255) -- branco
+espButton.Font = Enum.Font.GothamBold -- mais gordinho
 espButton.TextScaled = true
 espButton.Parent = frame
 
@@ -152,7 +153,7 @@ local function createPetESP(pet)
     nameLabel.BackgroundTransparency = 1
     nameLabel.TextScaled = true
     nameLabel.Font = Enum.Font.GothamBold
-    nameLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    nameLabel.TextColor3 = Color3.fromRGB(255,255,255) -- branco
     nameLabel.Text = pet.Name
     nameLabel.Parent = billboard
 
@@ -161,8 +162,8 @@ local function createPetESP(pet)
     valueLabel.Position = UDim2.new(0,0,0.5,0)
     valueLabel.BackgroundTransparency = 1
     valueLabel.TextScaled = true
-    valueLabel.Font = Enum.Font.Gotham
-    valueLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    valueLabel.Font = Enum.Font.GothamBold
+    valueLabel.TextColor3 = Color3.fromRGB(255,255,255) -- branco
     valueLabel.Text = "Value: " .. tostring(valuePerSecond) .. "/s"
     valueLabel.Parent = billboard
 
@@ -243,10 +244,10 @@ local function createPlayerButton(targetPlayer)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
     button.BackgroundColor3 = Color3.fromRGB(100,0,100)
-    button.TextColor3 = Color3.fromRGB(255,255,255)
-    button.Text = targetPlayer.Name
-    button.Font = Enum.Font.Gotham
+    button.TextColor3 = Color3.fromRGB(255,255,255) -- branco
+    button.Font = Enum.Font.GothamBold -- mais gordinho
     button.TextScaled = true
+    button.Text = targetPlayer.Name
     button.Parent = scrollFrame
 
     local corner = Instance.new("UICorner")
@@ -279,4 +280,4 @@ Players.PlayerAdded:Connect(function(player)
     end
 end)
 
-print("Mgby V10 Ultra carregado com ESP jogadores e pets selecionados!")
+print("Mgby V10 Ultra corrigido e otimizado carregado!")
