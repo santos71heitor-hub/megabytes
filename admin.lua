@@ -1,4 +1,4 @@
--- Mgby V10 - Painel Admin Limpo e Otimizado
+-- Mgby V12 - Painel Admin com ESP Jogadores ativado automaticamente
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -38,7 +38,7 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V10"
+title.Text = "Mgby V12"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -90,13 +90,13 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 end)
 
 -- ESP Jogadores
-local espEnabled = false
+local espEnabled = true -- ativado automaticamente
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
 espButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
-espButton.TextColor3 = Color3.fromRGB(255,0,0)
-espButton.Text = "ESP OFF"
+espButton.TextColor3 = Color3.fromRGB(0,255,0)
+espButton.Text = "ESP ON"
 espButton.Font = Enum.Font.GothamBold
 espButton.TextScaled = true
 espButton.Parent = frame
@@ -130,6 +130,13 @@ local function toggleESP()
     end
 end
 espButton.MouseButton1Click:Connect(toggleESP)
+
+-- Ativar ESP nos personagens existentes
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer and player.Character then
+        createHighlight(player.Character)
+    end
+end
 
 -- Criar botões para players
 local function createPlayerButton(targetPlayer)
