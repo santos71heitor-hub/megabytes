@@ -29,8 +29,11 @@ local petsToShow = {
     "Graipuss Medussi",
     "Celularcini Viciosini",
     "Los Combinasionas",
-    "La Grande Combinasion"
+    "La Grande Combinasion",
+    "Los Bros",
+    "Las Sis"
 }
+
 
 -- Espera LocalPlayer e PlayerGui
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
