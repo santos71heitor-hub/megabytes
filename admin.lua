@@ -1,4 +1,4 @@
--- Autoexec Mgby V6 Ultra
+-- Mgby V7 Ultra
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -6,6 +6,27 @@ local Workspace = game:GetService("Workspace")
 
 -- Lista de comandos
 local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
+
+-- Lista de pets para ESP
+local petsToShow = {
+    "Ketchuru and Musturu",
+    "Strawberry Elephant",
+    "Ketupat Kepat",
+    "La Supreme Combinasion",
+    "Tralaledon",
+    "Celularcini Viciosini",
+    "Los Noo My Hotspotsitos",
+    "Spaghetti Tualetti",
+    "Esok Sekolah",
+    "Los Hotspotsitos",
+    "Dragon Cannelloni",
+    "Chicleteira Bicicleteira",
+    "La Extinct Grande",
+    "Garama and Madundung",
+    "Nuclearo Dinossauro",
+    "Graipuss Medussi",
+    "Celularcini Viciosini"
+}
 
 -- Espera LocalPlayer e PlayerGui
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
@@ -23,110 +44,129 @@ screenGui.Parent = PlayerGui
 
 -- Frame principal
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,250,0,400)
-frame.Position = UDim2.new(0,1660,0,550)
+frame.Size = UDim2.new(0, 250, 0, 450)
+frame.Position = UDim2.new(0, 1660, 0, 520)
 frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
 local frameCorner = Instance.new("UICorner")
-frameCorner.CornerRadius = UDim.new(0,15)
+frameCorner.CornerRadius = UDim.new(0, 15)
 frameCorner.Parent = frame
 
 -- Título
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V6"
+title.Text = "Mgby V7 Ultra"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
--- ESP jogadores (ativado automaticamente)
-local espEnabled = true
-local ESP_COLOR = Color3.fromRGB(200,100,0) -- laranja escuro
-local ESP_OPACITY = 0.1 -- 90% opacidade (FillTransparency 0.1)
-local espObjects = {}
+-- ESP Jogadores
+local espEnabled = false
+local espButton = Instance.new("TextButton")
+espButton.Size = UDim2.new(0.9, 0, 0, 30)
+espButton.Position = UDim2.new(0.05, 0, 0, 35)
+espButton.BackgroundColor3 = Color3.fromRGB(100,0,100)
+espButton.TextColor3 = Color3.fromRGB(255,255,255)
+espButton.Text = "ESP Jogadores: OFF"
+espButton.Font = Enum.Font.Gotham
+espButton.TextScaled = true
+espButton.Parent = frame
 
 local function createHighlight(char)
-    if not espObjects[char] then
-        local highlight = Instance.new("Highlight")
+    local highlight = char:FindFirstChild("ESP_Highlight")
+    if not highlight then
+        highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
         highlight.Adornee = char
-        highlight.FillColor = ESP_COLOR
-        highlight.FillTransparency = ESP_OPACITY
+        highlight.FillColor = Color3.fromRGB(255,140,0)
+        highlight.FillTransparency = 0.1
         highlight.OutlineTransparency = 0.3
         highlight.Parent = char
-        espObjects[char] = highlight
     end
 end
 
 local function removeHighlight(char)
-    if espObjects[char] then
-        espObjects[char]:Destroy()
-        espObjects[char] = nil
-    end
+    local highlight = char:FindFirstChild("ESP_Highlight")
+    if highlight then highlight:Destroy() end
 end
 
--- Função para aplicar ESP rápido e automático
-local function updateESP()
+local function toggleESP()
+    espEnabled = not espEnabled
+    espButton.Text = espEnabled and "ESP Jogadores: ON" or "ESP Jogadores: OFF"
+
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            createHighlight(player.Character)
+        if player ~= LocalPlayer then
+            if player.Character then
+                if espEnabled then createHighlight(player.Character) else removeHighlight(player.Character) end
+            end
             player.CharacterAdded:Connect(function(char)
-                createHighlight(char)
+                if espEnabled then createHighlight(char) end
             end)
         end
     end
 end
+espButton.MouseButton1Click:Connect(toggleESP)
 
-updateESP() -- ativa ESP automaticamente ao entrar
-
--- Detecta novos jogadores rapidamente
-Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        player.CharacterAdded:Connect(function(char)
-            if espEnabled then createHighlight(char) end
-        end)
-    end
-end)
-
--- ESP Pets genéricos
-local petsToHighlight = {"DragonCameloni", "CyberWolf", "MegaPhoenix"}
+-- ESP Pets selecionados (nome + valor/s)
 local petsESPEnabled = true
-local petsESPObjects = {}
+local petsBillboards = {}
 
-local function createPetHighlight(pet)
-    if not petsESPObjects[pet] then
-        local highlight = Instance.new("Highlight")
-        highlight.Name = "Pet_Highlight"
-        highlight.Adornee = pet
-        highlight.FillColor = ESP_COLOR
-        highlight.FillTransparency = ESP_OPACITY
-        highlight.OutlineTransparency = 0.3
-        highlight.Parent = pet
-        petsESPObjects[pet] = highlight
+local function createPetESP(pet)
+    if petsBillboards[pet] then return end
+    local valuePerSecond = pet:GetAttribute("ValuePerSecond") or 0
+    if valuePerSecond < 10000000 then return end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "PetESP_Billboard"
+    billboard.Adornee = pet
+    billboard.Size = UDim2.new(0,200,0,50)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = pet
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1,0,0.5,0)
+    label.BackgroundTransparency = 1
+    label.TextScaled = true
+    label.Font = Enum.Font.GothamBold
+    label.TextColor3 = Color3.fromRGB(255,255,255)
+    label.Text = pet.Name
+    label.Parent = billboard
+
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Size = UDim2.new(1,0,0.5,0)
+    valueLabel.Position = UDim2.new(0,0,0.5,0)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.TextScaled = true
+    valueLabel.Font = Enum.Font.Gotham
+    valueLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    valueLabel.Text = "Value: " .. tostring(valuePerSecond) .. "/s"
+    valueLabel.Parent = billboard
+
+    petsBillboards[pet] = billboard
+end
+
+local function removePetESP(pet)
+    if petsBillboards[pet] then
+        petsBillboards[pet]:Destroy()
+        petsBillboards[pet] = nil
     end
 end
 
-local function removePetHighlight(pet)
-    if petsESPObjects[pet] then
-        petsESPObjects[pet]:Destroy()
-        petsESPObjects[pet] = nil
-    end
-end
-
--- Aplica ESP aos pets automaticamente
+-- Aplica ESP pets existentes
 for _, pet in ipairs(Workspace:GetDescendants()) do
-    if table.find(petsToHighlight, pet.Name) then
-        createPetHighlight(pet)
+    if table.find(petsToShow, pet.Name) then
+        createPetESP(pet)
     end
 end
 
+-- Detecta novos pets
 Workspace.DescendantAdded:Connect(function(pet)
-    if petsESPEnabled and table.find(petsToHighlight, pet.Name) then
-        createPetHighlight(pet)
+    if petsESPEnabled and table.find(petsToShow, pet.Name) then
+        createPetESP(pet)
     end
 end)
 
@@ -180,7 +220,7 @@ do
     end)
 end
 
--- Botões de players
+-- Função para criar botões de players
 local function createPlayerButton(targetPlayer)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
@@ -209,12 +249,18 @@ local function createPlayerButton(targetPlayer)
     end)
 end
 
+-- Cria botões para todos os players online
 for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then createPlayerButton(player) end
+    if player ~= LocalPlayer then
+        createPlayerButton(player)
+    end
 end
 
+-- Cria botão quando alguém entra
 Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then createPlayerButton(player) end
+    if player ~= LocalPlayer then
+        createPlayerButton(player)
+    end
 end)
 
-print("Mgby V6 Ultra carregado com ESP automático!")
+print("Mgby V7 Ultra carregado com ESP jogadores e pets selecionados!")
