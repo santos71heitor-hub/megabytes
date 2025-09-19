@@ -1,4 +1,4 @@
--- Mgby V9 Ultra
+-- Mgby V10 Ultra
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -59,65 +59,79 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V9 Ultra"
+title.Text = "Mgby V10 Ultra"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
--- BOTÃO ESP JOGADORES (cinza escuro)
+-- BOTÃO ESP JOGADORES
 local espEnabled = false
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9, 0, 0, 30)
 espButton.Position = UDim2.new(0.05, 0, 0, 35)
-espButton.BackgroundColor3 = Color3.fromRGB(100,0,100) -- cinza escuro igual aos botões de players
+espButton.BackgroundColor3 = Color3.fromRGB(100,0,100) -- cinza escuro
 espButton.Text = "ESP OFF"
 espButton.Font = Enum.Font.Gotham
 espButton.TextScaled = true
 espButton.Parent = frame
 
-local function createHighlight(char)
-    local highlight = char:FindFirstChild("ESP_Highlight")
-    if not highlight then
-        highlight = Instance.new("Highlight")
-        highlight.Name = "ESP_Highlight"
-        highlight.Adornee = char
-        highlight.FillColor = Color3.fromRGB(255,140,0)
-        highlight.FillTransparency = 0.1
-        highlight.OutlineTransparency = 0.3
-        highlight.Parent = char
+local playerHighlights = {}
+
+local function updateESPForPlayer(player)
+    if player.Character then
+        local highlight = player.Character:FindFirstChild("ESP_Highlight")
+        if espEnabled then
+            if not highlight then
+                highlight = Instance.new("Highlight")
+                highlight.Name = "ESP_Highlight"
+                highlight.Adornee = player.Character
+                highlight.FillColor = Color3.fromRGB(255,140,0)
+                highlight.FillTransparency = 0.1
+                highlight.OutlineTransparency = 0.3
+                highlight.Parent = player.Character
+                playerHighlights[player] = highlight
+            end
+        else
+            if highlight then
+                highlight:Destroy()
+                playerHighlights[player] = nil
+            end
+        end
     end
 end
 
-local function removeHighlight(char)
-    local highlight = char:FindFirstChild("ESP_Highlight")
-    if highlight then highlight:Destroy() end
+-- Conectar CharacterAdded apenas uma vez
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        player.CharacterAdded:Connect(function()
+            if espEnabled then updateESPForPlayer(player) end
+        end)
+    end
 end
+
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        player.CharacterAdded:Connect(function()
+            if espEnabled then updateESPForPlayer(player) end
+        end)
+    end
+end)
 
 local function toggleESP()
     espEnabled = not espEnabled
-    if espEnabled then
-        espButton.Text = "ESP ON"
-        espButton.TextColor3 = Color3.fromRGB(0,255,0) -- verde
-    else
-        espButton.Text = "ESP OFF"
-        espButton.TextColor3 = Color3.fromRGB(255,0,0) -- vermelho
-    end
+    espButton.Text = espEnabled and "ESP ON" or "ESP OFF"
+    espButton.TextColor3 = espEnabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            if player.Character then
-                if espEnabled then createHighlight(player.Character) else removeHighlight(player.Character) end
-            end
-            player.CharacterAdded:Connect(function(char)
-                if espEnabled then createHighlight(char) end
-            end)
+            updateESPForPlayer(player)
         end
     end
 end
 espButton.MouseButton1Click:Connect(toggleESP)
 
--- ESP PETS (apenas nome + valor/s, >=10 milhões/s)
+-- ESP PETS (nome + valor/s >= 10M/s)
 local petsBillboards = {}
 local petsESPEnabled = true
 
@@ -265,4 +279,4 @@ Players.PlayerAdded:Connect(function(player)
     end
 end)
 
-print("Mgby V9 Ultra carregado com ESP jogadores e pets selecionados!")
+print("Mgby V10 Ultra carregado com ESP jogadores e pets selecionados!")
