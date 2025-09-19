@@ -1,16 +1,28 @@
+-- Autoexec GlitchC V5 - Mgby
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 -- Lista de comandos
 local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
 
 -- Espera LocalPlayer e PlayerGui
 local LocalPlayer = Players.LocalPlayer
-while not LocalPlayer do task.wait() end
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+if not LocalPlayer then
+    LocalPlayer = Players.PlayerAdded:Wait()
+end
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
+if not PlayerGui then
+    warn("PlayerGui não carregou a tempo")
+    return
+end
 
--- Criar ScreenGui
+-- Espera RemoteEvent
+local NetPackage = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net")
+local ExecuteCommand = NetPackage:WaitForChild("RE/AdminPanelService/ExecuteCommand")
+
+-- Cria ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AlwaysVisibleAdminPanel"
 screenGui.Parent = PlayerGui
@@ -24,7 +36,6 @@ frame.BackgroundTransparency = 0
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
--- Borda arredondada no painel
 local frameCorner = Instance.new("UICorner")
 frameCorner.CornerRadius = UDim.new(0,15)
 frameCorner.Parent = frame
@@ -33,13 +44,13 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "GlitchC V4"
+title.Text = "Mgby"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
--- Botão para ativar/desativar ESP
+-- Botão ESP
 local espEnabled = false
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
@@ -51,28 +62,44 @@ espButton.Font = Enum.Font.Gotham
 espButton.TextScaled = true
 espButton.Parent = frame
 
+local function createHighlight(char)
+    local highlight = char:FindFirstChild("ESP_Highlight")
+    if not highlight then
+        highlight = Instance.new("Highlight")
+        highlight.Name = "ESP_Highlight"
+        highlight.Adornee = char
+        highlight.FillColor = Color3.fromRGB(255,200,100)
+        highlight.FillTransparency = 0.2
+        highlight.OutlineTransparency = 0.3
+        highlight.Parent = char
+    end
+end
+
+local function removeHighlight(char)
+    local highlight = char:FindFirstChild("ESP_Highlight")
+    if highlight then
+        highlight:Destroy()
+    end
+end
+
 local function toggleESP()
     espEnabled = not espEnabled
     espButton.Text = espEnabled and "ESP: ON" or "ESP: OFF"
 
     for _, player in ipairs(Players:GetPlayers()) do
-        if player.Character then
-            local highlight = player.Character:FindFirstChild("ESP_Highlight")
-            if espEnabled then
-                if not highlight then
-                    highlight = Instance.new("Highlight")
-                    highlight.Name = "ESP_Highlight"
-                    highlight.Adornee = player.Character
-                    highlight.FillColor = Color3.fromRGB(255,200,100)
-                    highlight.FillTransparency = 0.2 -- mais forte que antes
-                    highlight.OutlineTransparency = 0.3 -- contorno leve para destacar
-                    highlight.Parent = player.Character
-                end
-            else
-                if highlight then
-                    highlight:Destroy()
+        if player ~= LocalPlayer then
+            if player.Character then
+                if espEnabled then
+                    createHighlight(player.Character)
+                else
+                    removeHighlight(player.Character)
                 end
             end
+            player.CharacterAdded:Connect(function(char)
+                if espEnabled then
+                    createHighlight(char)
+                end
+            end)
         end
     end
 end
@@ -148,24 +175,14 @@ local function createPlayerButton(targetPlayer)
     corner.CornerRadius = UDim.new(0,10)
     corner.Parent = button
 
-    local capturedPlayer = targetPlayer
-
     button.MouseButton1Click:Connect(function()
         for _, cmd in ipairs(commands) do
             task.spawn(function()
-                local event
-                if ReplicatedStorage:FindFirstChild("Packages") and ReplicatedStorage.Packages:FindFirstChild("Net") then
-                    event = ReplicatedStorage.Packages.Net:FindFirstChild("RE/AdminPanelService/ExecuteCommand")
-                end
-                if event then
-                    local ok, err = pcall(function()
-                        event:FireServer(capturedPlayer, cmd)
-                    end)
-                    if not ok then
-                        warn("[FireServer] erro com", capturedPlayer.Name, cmd, err)
-                    end
-                else
-                    warn("RemoteEvent ExecuteCommand não encontrado")
+                local ok, err = pcall(function()
+                    ExecuteCommand:FireServer(targetPlayer, cmd)
+                end)
+                if not ok then
+                    warn("[FireServer] erro com", targetPlayer.Name, cmd, err)
                 end
             end)
         end
@@ -185,3 +202,5 @@ Players.PlayerAdded:Connect(function(player)
         createPlayerButton(player)
     end
 end)
+
+print("GlitchC V5 - Mgby carregado com sucesso!")
