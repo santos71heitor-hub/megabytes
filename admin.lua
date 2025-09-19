@@ -1,4 +1,4 @@
--- Mgby V13 - Painel Admin + ESP Players + ESP Generation
+-- Mgby V13 corrigido
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -9,7 +9,7 @@ local RunService = game:GetService("RunService")
 -- Lista de comandos
 local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
 
--- Lista de nomes para ESP Generation (seu script)
+-- Lista de nomes para ESP Generation
 local targetNames = {
     ["Los Combinasionas"] = true,
     ["La Extinct Grande"] = true
@@ -27,21 +27,20 @@ local function parseNum(t)
     return n*(mult[s] or 1)
 end
 
--- Espera LocalPlayer e PlayerGui
+-- LocalPlayer e PlayerGui
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
 if not PlayerGui then warn("PlayerGui não carregou a tempo") return end
 
--- Espera RemoteEvent
+-- RemoteEvent
 local NetPackage = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net")
 local ExecuteCommand = NetPackage:WaitForChild("RE/AdminPanelService/ExecuteCommand")
 
--- Cria ScreenGui
+-- Painel
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AlwaysVisibleAdminPanel"
 screenGui.Parent = PlayerGui
 
--- Frame principal centralizado
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0,250,0,450)
 frame.AnchorPoint = Vector2.new(0.5,0.5)
@@ -54,7 +53,6 @@ local frameCorner = Instance.new("UICorner")
 frameCorner.CornerRadius = UDim.new(0,15)
 frameCorner.Parent = frame
 
--- Título
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
@@ -71,7 +69,6 @@ do
         local delta = input.Position - mousePos
         frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
     end
-
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
@@ -84,13 +81,11 @@ do
             end)
         end
     end)
-
     frame.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then
             dragInput = input
         end
     end)
-
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             update(input)
@@ -98,7 +93,7 @@ do
     end)
 end
 
--- ScrollingFrame para botões de players
+-- ScrollingFrame para players
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1,0,1,-150)
 scrollFrame.Position = UDim2.new(0,0,0,150)
@@ -118,22 +113,21 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     scrollFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
 end)
 
--- BOTÃO ESP JOGADORES
-local espEnabled = true -- Ativado automaticamente
+-- ESP players
+local espEnabled = true
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
-espButton.BackgroundColor3 = Color3.fromRGB(50,50,50) -- cinza escuro
-espButton.TextColor3 = Color3.fromRGB(0,255,0) -- verde ON
+espButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
+espButton.TextColor3 = Color3.fromRGB(0,255,0)
 espButton.Text = "ESP ON"
 espButton.Font = Enum.Font.GothamBold
 espButton.TextScaled = true
 espButton.Parent = frame
 
 local function createHighlight(char)
-    local highlight = char:FindFirstChild("ESP_Highlight")
-    if not highlight then
-        highlight = Instance.new("Highlight")
+    if not char:FindFirstChild("ESP_Highlight") then
+        local highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
         highlight.Adornee = char
         highlight.FillColor = Color3.fromRGB(255,165,0)
@@ -152,7 +146,6 @@ local function toggleESP()
     espEnabled = not espEnabled
     espButton.Text = espEnabled and "ESP ON" or "ESP OFF"
     espButton.TextColor3 = espEnabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
-
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
             if espEnabled then createHighlight(player.Character) else removeHighlight(player.Character) end
@@ -164,7 +157,7 @@ local function toggleESP()
 end
 espButton.MouseButton1Click:Connect(toggleESP)
 
--- CRIAR BOTÕES PARA TODOS OS PLAYERS
+-- Cria botões dos players
 local function createPlayerButton(targetPlayer)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
@@ -174,19 +167,14 @@ local function createPlayerButton(targetPlayer)
     button.Font = Enum.Font.GothamBold
     button.TextScaled = true
     button.Parent = scrollFrame
-
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0,10)
     corner.Parent = button
-
     local capturedPlayer = targetPlayer
-
     button.MouseButton1Click:Connect(function()
         task.spawn(function()
             for _, cmd in ipairs(commands) do
-                if ExecuteCommand then
-                    ExecuteCommand:FireServer(capturedPlayer, cmd)
-                end
+                ExecuteCommand:FireServer(capturedPlayer, cmd)
                 task.wait(0.2)
             end
         end)
@@ -204,25 +192,22 @@ Players.PlayerAdded:Connect(function(player)
     end
 end)
 
--- ============================
--- ESP GENERATION (integrado)
--- ============================
-
--- Criar Billboard do ESP Generation
+-- ESP Generation
 local function criarBillboardGen(basePart,name,val,id)
-    -- Destroi antigo se já existir para esse mob
     if activeBillboards[id] then
         activeBillboards[id]:Destroy()
         activeBillboards[id] = nil
     end
 
-    local bb=Instance.new("BillboardGui",CoreGui)
+    local parentGui = CoreGui:FindFirstChild("RobloxGui") or CoreGui
+
+    local bb = Instance.new("BillboardGui", parentGui)
     bb.Size=UDim2.new(0,200,0,50)
     bb.Adornee=basePart
     bb.AlwaysOnTop=true
     bb.StudsOffset=Vector3.new(0,4,0)
 
-    local l1=Instance.new("TextLabel",bb)
+    local l1 = Instance.new("TextLabel", bb)
     l1.Size = UDim2.new(1,0,0.5,0)
     l1.BackgroundTransparency = 1
     l1.TextColor3 = Color3.fromRGB(255,255,0)
@@ -232,11 +217,11 @@ local function criarBillboardGen(basePart,name,val,id)
     l1.TextScaled = true
     l1.Text = name or "N/A"
 
-    local l2=Instance.new("TextLabel",bb)
+    local l2 = Instance.new("TextLabel", bb)
     l2.Size = UDim2.new(1,0,0.5,0)
     l2.Position = UDim2.new(0,0,0.5,0)
     l2.BackgroundTransparency = 1
-    l2.TextColor3 = Color3.fromRGB(0,255,255) -- ciano
+    l2.TextColor3 = Color3.fromRGB(0,255,255)
     l2.TextStrokeTransparency = 0
     l2.TextStrokeColor3 = Color3.new(0,0,0)
     l2.Font = Enum.Font.GothamBold
@@ -246,7 +231,6 @@ local function criarBillboardGen(basePart,name,val,id)
     activeBillboards[id] = bb
 end
 
--- Loop para procurar os alvos da lista
 RunService.Heartbeat:Connect(function()
     for _,o in ipairs(Workspace:GetDescendants()) do
         if o:IsA("TextLabel") and o.Name=="Generation" and not o.Text:lower():find("fusing") then
@@ -258,11 +242,9 @@ RunService.Heartbeat:Connect(function()
                 end
                 parent=parent.Parent
             end
-
             if basePart then
                 local displayName= o.Parent:FindFirstChild("DisplayName")
                 local mobName = displayName and displayName.Text or "N/A"
-
                 if targetNames[mobName] then
                     criarBillboardGen(basePart,mobName,o.Text, basePart:GetDebugId())
                 end
