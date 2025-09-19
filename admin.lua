@@ -1,27 +1,26 @@
--- Aimbot automático ao entrar no servidor
+-- Aimbot Web Slinger
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local Workspace = game:GetService("Workspace")
 
--- Configuração
-local AIM_RADIUS = 300 -- pixels de distância máxima para selecionar jogador próximo
+-- Função para calcular a distância entre dois vetores
+local function getDistance(pos1, pos2)
+    return (pos1 - pos2).Magnitude
+end
 
--- Função para calcular jogador mais próximo do mouse
-local function getClosestPlayer(mousePos)
+-- Função para encontrar o jogador mais próximo
+local function getClosestPlayer()
     local closestPlayer = nil
-    local shortestDist = AIM_RADIUS
+    local shortestDistance = math.huge
 
-    for _, player in ipairs(Players:GetPlayers()) do
+    for _, player in pairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local charPos = player.Character.HumanoidRootPart.Position
-            local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(charPos)
-            if onScreen then
-                local dist = (Vector2.new(mousePos.X, mousePos.Y) - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
-                if dist < shortestDist then
-                    shortestDist = dist
-                    closestPlayer = player
-                end
+            local distance = getDistance(LocalPlayer.Character.HumanoidRootPart.Position, player.Character.HumanoidRootPart.Position)
+            if distance < shortestDistance then
+                shortestDistance = distance
+                closestPlayer = player
             end
         end
     end
@@ -29,31 +28,30 @@ local function getClosestPlayer(mousePos)
     return closestPlayer
 end
 
--- Função para disparar teia
+-- Função para disparar a teia
 local function shootWeb(targetPlayer)
-    if targetPlayer and targetPlayer.Character then
-        -- Substitua abaixo pelo método real do lançador de teia
-        -- Ex: LancaTeia(targetPlayer.Character.HumanoidRootPart.Position)
+    if not targetPlayer or not targetPlayer.Character then return end
+
+    local tool = LocalPlayer.Backpack:FindFirstChild("Web Slinger") or LocalPlayer.Character:FindFirstChild("Web Slinger")
+    if tool then
+        -- Aqui você precisa disparar o RemoteEvent ou função do seu jogo
+        -- Exemplo genérico:
+        if tool:FindFirstChild("ShootEvent") then
+            tool.ShootEvent:FireServer(targetPlayer.Character.HumanoidRootPart.Position)
+        else
+            -- Caso o disparo seja feito com clique, simular clique no mouse
+            tool:Activate()
+        end
     end
 end
 
--- Função para disparar laser
-local function shootLaser(targetPlayer)
-    if targetPlayer and targetPlayer.Character then
-        -- Substitua abaixo pelo método real do laser
-        -- Ex: DisparaLaser(targetPlayer.Character.HumanoidRootPart.Position)
-    end
-end
-
--- Ativar aimbot automaticamente
-UserInputService.InputBegan:Connect(function(input, processed)
-    if processed then return end
+-- Detecta clique do mouse e dispara no jogador mais próximo
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        local mousePos = UserInputService:GetMouseLocation()
-        local targetPlayer = getClosestPlayer(mousePos)
-        if targetPlayer then
-            shootWeb(targetPlayer)
-            shootLaser(targetPlayer)
+        local closest = getClosestPlayer()
+        if closest then
+            shootWeb(closest)
         end
     end
 end)
