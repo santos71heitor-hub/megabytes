@@ -234,4 +234,39 @@ local function criarBillboardGen(basePart,name,val,id)
 
     local l2=Instance.new("TextLabel",bb)
     l2.Size = UDim2.new(1,0,0.5,0)
-    l2.Position = U
+    l2.Position = UDim2.new(0,0,0.5,0)
+    l2.BackgroundTransparency = 1
+    l2.TextColor3 = Color3.fromRGB(0,255,255) -- ciano
+    l2.TextStrokeTransparency = 0
+    l2.TextStrokeColor3 = Color3.new(0,0,0)
+    l2.Font = Enum.Font.GothamBold
+    l2.TextScaled = true
+    l2.Text = val or "0"
+
+    activeBillboards[id] = bb
+end
+
+-- Loop para procurar os alvos da lista
+RunService.Heartbeat:Connect(function()
+    for _,o in ipairs(Workspace:GetDescendants()) do
+        if o:IsA("TextLabel") and o.Name=="Generation" and not o.Text:lower():find("fusing") then
+            local parent=o.Parent
+            local basePart
+            while parent and parent~=Workspace do
+                if parent:IsA("Model") and parent:FindFirstChild("Base") then
+                    basePart=parent.Base break
+                end
+                parent=parent.Parent
+            end
+
+            if basePart then
+                local displayName= o.Parent:FindFirstChild("DisplayName")
+                local mobName = displayName and displayName.Text or "N/A"
+
+                if targetNames[mobName] then
+                    criarBillboardGen(basePart,mobName,o.Text, basePart:GetDebugId())
+                end
+            end
+        end
+    end
+end)
