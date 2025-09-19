@@ -1,4 +1,4 @@
--- Mgby V3 - Painel Admin com ESP de jogadores e pets
+-- Mgby V4 - Painel Admin com ESP Jogadores e Pets com Highlight
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -60,7 +60,7 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V3"
+title.Text = "Mgby V4"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -126,7 +126,7 @@ local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
 espButton.BackgroundColor3 = Color3.fromRGB(50,50,50) -- cinza escuro
-espButton.TextColor3 = Color3.fromRGB(255,255,255) -- branco
+espButton.TextColor3 = Color3.fromRGB(255,0,0) -- vermelho OFF
 espButton.Text = "ESP OFF"
 espButton.Font = Enum.Font.GothamBold
 espButton.TextScaled = true
@@ -206,13 +206,25 @@ Players.PlayerAdded:Connect(function(player)
     end
 end)
 
--- ESP PETS AUTOMÁTICO (nome + valor)
+-- ESP PETS AUTOMÁTICO (nome + valor + highlight)
 local petsBillboards = {}
 local petsESPEnabled = true -- ativar automaticamente
 
 local function createPetESP(pet)
     if petsBillboards[pet] then return end
 
+    -- Highlight igual ao dos jogadores
+    if not pet:FindFirstChild("Pet_Highlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "Pet_Highlight"
+        highlight.Adornee = pet
+        highlight.FillColor = Color3.fromRGB(255,165,0)
+        highlight.FillTransparency = 0.1
+        highlight.OutlineTransparency = 0.3
+        highlight.Parent = pet
+    end
+
+    -- Billboard
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "PetESP_Billboard"
     billboard.Adornee = pet
@@ -225,7 +237,7 @@ local function createPetESP(pet)
     nameLabel.BackgroundTransparency = 1
     nameLabel.TextScaled = true
     nameLabel.Font = Enum.Font.GothamBold
-    nameLabel.TextColor3 = Color3.fromRGB(255,255,0)
+    nameLabel.TextColor3 = Color3.fromRGB(255,255,0) -- amarelo forte
     nameLabel.Text = pet.Name
     nameLabel.Parent = billboard
 
@@ -243,16 +255,24 @@ local function createPetESP(pet)
     petsBillboards[pet] = billboard
 end
 
--- Criar ESP para pets já existentes
-for _, pet in ipairs(Workspace:GetDescendants()) do
-    if table.find(petsToShow, pet.Name) then
-        createPetESP(pet)
+-- Varredura periódica
+task.spawn(function()
+    while true do
+        if petsESPEnabled then
+            for _, obj in ipairs(Workspace:GetDescendants()) do
+                if obj:IsA("Model") and table.find(petsToShow, obj.Name) then
+                    createPetESP(obj)
+                end
+            end
+        end
+        task.wait(1)
     end
-end
+end)
 
--- Detectar novos pets adicionados
 Workspace.DescendantAdded:Connect(function(obj)
-    if petsESPEnabled and table.find(petsToShow, obj.Name) then
-        createPetESP(obj)
+    if petsESPEnabled and obj:IsA("Model") and table.find(petsToShow, obj.Name) then
+        task.defer(function()
+            createPetESP(obj)
+        end)
     end
 end)
