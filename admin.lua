@@ -1,4 +1,4 @@
--- Mgby V6 - Painel Admin com ESP Jogadores e Pets (Generation)
+-- Mgby V7 - Painel Admin com ESP Jogadores e Pets (Generation Real)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -33,7 +33,7 @@ local petsToShow = {
 
 -- Espera LocalPlayer e PlayerGui
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui",10)
 if not PlayerGui then warn("PlayerGui não carregou a tempo") return end
 
 -- Espera RemoteEvent
@@ -62,7 +62,7 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V6"
+title.Text = "Mgby V7"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -127,8 +127,8 @@ local espEnabled = false
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
-espButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
-espButton.TextColor3 = Color3.fromRGB(255,0,0)
+espButton.BackgroundColor3 = Color3.fromRGB(50,50,50) -- cinza escuro
+espButton.TextColor3 = Color3.fromRGB(255,0,0) -- vermelho OFF
 espButton.Text = "ESP OFF"
 espButton.Font = Enum.Font.GothamBold
 espButton.TextScaled = true
@@ -156,6 +156,7 @@ local function toggleESP()
     espEnabled = not espEnabled
     espButton.Text = espEnabled and "ESP ON" or "ESP OFF"
     espButton.TextColor3 = espEnabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
+
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
             if espEnabled then createHighlight(player.Character) else removeHighlight(player.Character) end
@@ -197,20 +198,33 @@ local function createPlayerButton(targetPlayer)
 end
 
 for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then createPlayerButton(player) end
+    if player ~= LocalPlayer then
+        createPlayerButton(player)
+    end
 end
 Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then createPlayerButton(player) end
+    if player ~= LocalPlayer then
+        createPlayerButton(player)
+    end
 end)
 
--- ESP PETS AUTOMÁTICO (nome + geração)
+-- PARSER DE NÚMERO
+local function parseNum(str)
+    str = str:gsub("[%$,]","")
+    local n,s = str:match("([%d%.]+)([KMB]?)")
+    n = tonumber(n) or 0
+    local mult = {K=1e3,M=1e6,B=1e9}
+    return n * (mult[s] or 1)
+end
+
+-- ESP PETS AUTOMÁTICO (nome + geração + highlight)
 local petsBillboards = {}
-local petsESPEnabled = true
+local petsESPEnabled = true -- ativar automaticamente
 
 local function createPetESP(pet)
     if petsBillboards[pet] then return end
 
-    -- Highlight
+    -- Highlight igual ao dos jogadores
     if not pet:FindFirstChild("Pet_Highlight") then
         local highlight = Instance.new("Highlight")
         highlight.Name = "Pet_Highlight"
@@ -229,17 +243,19 @@ local function createPetESP(pet)
     billboard.AlwaysOnTop = true
     billboard.Parent = pet
 
+    -- Nome do pet
     local nameLabel = Instance.new("TextLabel")
     nameLabel.Size = UDim2.new(1,0,0.5,0)
     nameLabel.BackgroundTransparency = 1
     nameLabel.TextScaled = true
     nameLabel.Font = Enum.Font.GothamBold
-    nameLabel.TextColor3 = Color3.fromRGB(255,255,0) -- amarelo forte
+    nameLabel.TextColor3 = Color3.fromRGB(255,255,0)
     nameLabel.TextStrokeTransparency = 0
     nameLabel.TextStrokeColor3 = Color3.new(0,0,0)
     nameLabel.Text = pet.Name
     nameLabel.Parent = billboard
 
+    -- Valor de geração
     local valueLabel = Instance.new("TextLabel")
     valueLabel.Size = UDim2.new(1,0,0.5,0)
     valueLabel.Position = UDim2.new(0,0,0.5,0)
@@ -247,10 +263,17 @@ local function createPetESP(pet)
     valueLabel.TextScaled = true
     valueLabel.Font = Enum.Font.GothamBold
     valueLabel.TextColor3 = Color3.fromRGB(255,255,255)
-    local generation = pet:GetAttribute("Generation") or 0
-    valueLabel.Text = tostring(generation).."/s"
-    valueLabel.Parent = billboard
+    
+    -- Pegar valor real do pet
+    local genLabel = pet:FindFirstChild("Generation")
+    if genLabel and genLabel:IsA("TextLabel") then
+        local genValue = parseNum(genLabel.Text)
+        valueLabel.Text = tostring(genValue).."/s"
+    else
+        valueLabel.Text = "0/s"
+    end
 
+    valueLabel.Parent = billboard
     petsBillboards[pet] = billboard
 end
 
@@ -259,7 +282,7 @@ task.spawn(function()
     while true do
         if petsESPEnabled then
             for _, obj in ipairs(Workspace:GetDescendants()) do
-                if obj:IsA("Model") and table.find(petsToShow, obj.Name) then
+                if obj:IsA("Model") and table.find(petsToShow,obj.Name) then
                     createPetESP(obj)
                 end
             end
@@ -269,7 +292,9 @@ task.spawn(function()
 end)
 
 Workspace.DescendantAdded:Connect(function(obj)
-    if petsESPEnabled and obj:IsA("Model") and table.find(petsToShow, obj.Name) then
-        task.defer(function() createPetESP(obj) end)
+    if petsESPEnabled and obj:IsA("Model") and table.find(petsToShow,obj.Name) then
+        task.defer(function()
+            createPetESP(obj)
+        end)
     end
 end)
