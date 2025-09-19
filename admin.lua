@@ -1,4 +1,4 @@
--- Mgby V8 Ultra
+-- Mgby V9 Ultra
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -7,7 +7,7 @@ local Workspace = game:GetService("Workspace")
 -- Lista de comandos
 local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
 
--- Lista de pets para ESP incluindo Los Combinasionas
+-- Lista de pets para ESP
 local petsToShow = {
     "Ketchuru and Musturu",
     "Strawberry Elephant",
@@ -59,20 +59,19 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V8 Ultra"
+title.Text = "Mgby V9 Ultra"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
--- BOTÃO ESP JOGADORES
+-- BOTÃO ESP JOGADORES (somente título)
 local espEnabled = false
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9, 0, 0, 30)
 espButton.Position = UDim2.new(0.05, 0, 0, 35)
-espButton.BackgroundColor3 = Color3.fromRGB(100,0,100)
-espButton.TextColor3 = Color3.fromRGB(255,255,255)
-espButton.Text = "ESP Jogadores: OFF"
+espButton.BackgroundColor3 = Color3.fromRGB(200,200,200) -- cinza claro
+espButton.Text = "ESP OFF"
 espButton.Font = Enum.Font.Gotham
 espButton.TextScaled = true
 espButton.Parent = frame
@@ -97,7 +96,13 @@ end
 
 local function toggleESP()
     espEnabled = not espEnabled
-    espButton.Text = espEnabled and "ESP Jogadores: ON" or "ESP Jogadores: OFF"
+    if espEnabled then
+        espButton.Text = "ESP ON"
+        espButton.TextColor3 = Color3.fromRGB(0,255,0) -- verde
+    else
+        espButton.Text = "ESP OFF"
+        espButton.TextColor3 = Color3.fromRGB(255,0,0) -- vermelho
+    end
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
@@ -113,8 +118,8 @@ end
 espButton.MouseButton1Click:Connect(toggleESP)
 
 -- ESP PETS
-local petsESPEnabled = true
 local petsBillboards = {}
+local petsESPEnabled = true
 
 local function createPetESP(pet)
     if petsBillboards[pet] then return end
@@ -157,14 +162,12 @@ local function removePetESP(pet)
     end
 end
 
--- Aplica ESP para pets existentes
 for _, pet in ipairs(Workspace:GetDescendants()) do
     if table.find(petsToShow, pet.Name) then
         createPetESP(pet)
     end
 end
 
--- Detecta novos pets
 Workspace.DescendantAdded:Connect(function(pet)
     if petsESPEnabled and table.find(petsToShow, pet.Name) then
         createPetESP(pet)
@@ -225,8 +228,8 @@ end
 local function createPlayerButton(targetPlayer)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
-    button.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    button.TextColor3 = Color3.fromRGB(255,255,255)
+    button.BackgroundColor3 = Color3.fromRGB(200,200,200)
+    button.TextColor3 = Color3.fromRGB(0,0,0)
     button.Text = targetPlayer.Name
     button.Font = Enum.Font.Gotham
     button.TextScaled = true
@@ -250,18 +253,16 @@ local function createPlayerButton(targetPlayer)
     end)
 end
 
--- Cria botões para todos os players online
 for _, player in ipairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         createPlayerButton(player)
     end
 end
 
--- Cria botão quando alguém entra
 Players.PlayerAdded:Connect(function(player)
     if player ~= LocalPlayer then
         createPlayerButton(player)
     end
 end)
 
-print("Mgby V8 Ultra carregado com ESP jogadores e pets selecionados!")
+print("Mgby V9 Ultra carregado com ESP jogadores e pets selecionados!")
