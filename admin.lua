@@ -65,12 +65,12 @@ title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
--- BOTÃO ESP JOGADORES (somente título)
+-- BOTÃO ESP JOGADORES (cinza escuro)
 local espEnabled = false
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9, 0, 0, 30)
 espButton.Position = UDim2.new(0.05, 0, 0, 35)
-espButton.BackgroundColor3 = Color3.fromRGB(200,200,200) -- cinza claro
+espButton.BackgroundColor3 = Color3.fromRGB(100,0,100) -- cinza escuro igual aos botões de players
 espButton.Text = "ESP OFF"
 espButton.Font = Enum.Font.Gotham
 espButton.TextScaled = true
@@ -117,7 +117,7 @@ local function toggleESP()
 end
 espButton.MouseButton1Click:Connect(toggleESP)
 
--- ESP PETS
+-- ESP PETS (apenas nome + valor/s, >=10 milhões/s)
 local petsBillboards = {}
 local petsESPEnabled = true
 
@@ -228,8 +228,8 @@ end
 local function createPlayerButton(targetPlayer)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
-    button.BackgroundColor3 = Color3.fromRGB(200,200,200)
-    button.TextColor3 = Color3.fromRGB(0,0,0)
+    button.BackgroundColor3 = Color3.fromRGB(100,0,100)
+    button.TextColor3 = Color3.fromRGB(255,255,255)
     button.Text = targetPlayer.Name
     button.Font = Enum.Font.Gotham
     button.TextScaled = true
