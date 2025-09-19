@@ -1,4 +1,4 @@
--- Mgby V7 Ultra
+-- Mgby V8 Ultra
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -7,7 +7,7 @@ local Workspace = game:GetService("Workspace")
 -- Lista de comandos
 local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
 
--- Lista de pets para ESP
+-- Lista de pets para ESP incluindo Los Combinasionas
 local petsToShow = {
     "Ketchuru and Musturu",
     "Strawberry Elephant",
@@ -25,7 +25,8 @@ local petsToShow = {
     "Garama and Madundung",
     "Nuclearo Dinossauro",
     "Graipuss Medussi",
-    "Celularcini Viciosini"
+    "Celularcini Viciosini",
+    "Los Combinasionas"
 }
 
 -- Espera LocalPlayer e PlayerGui
@@ -58,13 +59,13 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V7 Ultra"
+title.Text = "Mgby V8 Ultra"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
--- ESP Jogadores
+-- BOTÃO ESP JOGADORES
 local espEnabled = false
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9, 0, 0, 30)
@@ -111,7 +112,7 @@ local function toggleESP()
 end
 espButton.MouseButton1Click:Connect(toggleESP)
 
--- ESP Pets selecionados (nome + valor/s)
+-- ESP PETS
 local petsESPEnabled = true
 local petsBillboards = {}
 
@@ -127,14 +128,14 @@ local function createPetESP(pet)
     billboard.AlwaysOnTop = true
     billboard.Parent = pet
 
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1,0,0.5,0)
-    label.BackgroundTransparency = 1
-    label.TextScaled = true
-    label.Font = Enum.Font.GothamBold
-    label.TextColor3 = Color3.fromRGB(255,255,255)
-    label.Text = pet.Name
-    label.Parent = billboard
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1,0,0.5,0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.TextScaled = true
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    nameLabel.Text = pet.Name
+    nameLabel.Parent = billboard
 
     local valueLabel = Instance.new("TextLabel")
     valueLabel.Size = UDim2.new(1,0,0.5,0)
@@ -156,7 +157,7 @@ local function removePetESP(pet)
     end
 end
 
--- Aplica ESP pets existentes
+-- Aplica ESP para pets existentes
 for _, pet in ipairs(Workspace:GetDescendants()) do
     if table.find(petsToShow, pet.Name) then
         createPetESP(pet)
@@ -263,4 +264,4 @@ Players.PlayerAdded:Connect(function(player)
     end
 end)
 
-print("Mgby V7 Ultra carregado com ESP jogadores e pets selecionados!")
+print("Mgby V8 Ultra carregado com ESP jogadores e pets selecionados!")
