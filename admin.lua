@@ -1,10 +1,9 @@
--- Mgby V10 Ultra (corrigido)
+-- Mgby V11 Ultra (Pets ESP automático e cores ajustadas)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
--- Lista de comandos
 local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
 
 -- Lista de pets para ESP
@@ -29,30 +28,28 @@ local petsToShow = {
     "Los Combinasionas"
 }
 
--- Espera LocalPlayer e PlayerGui
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui",10)
 if not PlayerGui then warn("PlayerGui não carregou a tempo") return end
 
--- Espera RemoteEvent
 local NetPackage = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Net")
 local ExecuteCommand = NetPackage:WaitForChild("RE/AdminPanelService/ExecuteCommand")
 
--- Cria ScreenGui
+-- ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AlwaysVisibleAdminPanel"
 screenGui.Parent = PlayerGui
 
 -- Frame principal
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 250, 0, 450)
-frame.Position = UDim2.new(0, 1660, 0, 520)
+frame.Size = UDim2.new(0,250,0,450)
+frame.Position = UDim2.new(0,1660,0,520)
 frame.BackgroundColor3 = Color3.fromRGB(0,0,0) -- painel preto
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
 local frameCorner = Instance.new("UICorner")
-frameCorner.CornerRadius = UDim.new(0, 15)
+frameCorner.CornerRadius = UDim.new(0,15)
 frameCorner.Parent = frame
 
 -- Título
@@ -62,23 +59,31 @@ title.BackgroundTransparency = 1
 title.Text = "Mgby V11 Ultra"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
-title.Font = Enum.Font.GothamBold -- mais gordinho
+title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
 -- BOTÃO ESP JOGADORES
 local espEnabled = false
 local espButton = Instance.new("TextButton")
-espButton.Size = UDim2.new(0.9, 0, 0, 30)
-espButton.Position = UDim2.new(0.05, 0, 0, 35)
-espButton.BackgroundColor3 = Color3.fromRGB(50,50,50) -- cinza escuro
-espButton.Text = "ESP OFF"
-espButton.TextColor3 = Color3.fromRGB(255,255,255) -- branco
-espButton.Font = Enum.Font.GothamBold -- mais gordinho
+espButton.Size = UDim2.new(0.9,0,0,30)
+espButton.Position = UDim2.new(0.05,0,0,35)
+espButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
+espButton.Font = Enum.Font.GothamBold
 espButton.TextScaled = true
 espButton.Parent = frame
 
-local playerHighlights = {}
+local function updateESPButtonText()
+    if espEnabled then
+        espButton.Text = "ESP ON"
+        espButton.TextColor3 = Color3.fromRGB(0,255,0)
+    else
+        espButton.Text = "ESP OFF"
+        espButton.TextColor3 = Color3.fromRGB(255,0,0)
+    end
+end
+updateESPButtonText()
 
+local playerHighlights = {}
 local function updateESPForPlayer(player)
     if player.Character then
         local highlight = player.Character:FindFirstChild("ESP_Highlight")
@@ -102,7 +107,6 @@ local function updateESPForPlayer(player)
     end
 end
 
--- Conectar CharacterAdded apenas uma vez
 for _, player in ipairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         player.CharacterAdded:Connect(function()
@@ -119,77 +123,17 @@ Players.PlayerAdded:Connect(function(player)
     end
 end)
 
-local function toggleESP()
+espButton.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
-    espButton.Text = espEnabled and "ESP ON" or "ESP OFF"
-    espButton.TextColor3 = espEnabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
-
+    updateESPButtonText()
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
             updateESPForPlayer(player)
         end
     end
-end
-espButton.MouseButton1Click:Connect(toggleESP)
-
--- ESP PETS (nome + valor/s >= 10M/s)
-local petsBillboards = {}
-local petsESPEnabled = true
-
-local function createPetESP(pet)
-    if petsBillboards[pet] then return end
-    local valuePerSecond = pet:GetAttribute("ValuePerSecond") or 0
-    if valuePerSecond < 10000000 then return end
-
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "PetESP_Billboard"
-    billboard.Adornee = pet
-    billboard.Size = UDim2.new(0,200,0,50)
-    billboard.AlwaysOnTop = true
-    billboard.Parent = pet
-
-    local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(1,0,0.5,0)
-    nameLabel.BackgroundTransparency = 1
-    nameLabel.TextScaled = true
-    nameLabel.Font = Enum.Font.GothamBold
-    nameLabel.TextColor3 = Color3.fromRGB(255,255,255) -- branco
-    nameLabel.Text = pet.Name
-    nameLabel.Parent = billboard
-
-    local valueLabel = Instance.new("TextLabel")
-    valueLabel.Size = UDim2.new(1,0,0.5,0)
-    valueLabel.Position = UDim2.new(0,0,0.5,0)
-    valueLabel.BackgroundTransparency = 1
-    valueLabel.TextScaled = true
-    valueLabel.Font = Enum.Font.GothamBold
-    valueLabel.TextColor3 = Color3.fromRGB(255,255,255) -- branco
-    valueLabel.Text = "Value: " .. tostring(valuePerSecond) .. "/s"
-    valueLabel.Parent = billboard
-
-    petsBillboards[pet] = billboard
-end
-
-local function removePetESP(pet)
-    if petsBillboards[pet] then
-        petsBillboards[pet]:Destroy()
-        petsBillboards[pet] = nil
-    end
-end
-
-for _, pet in ipairs(Workspace:GetDescendants()) do
-    if table.find(petsToShow, pet.Name) then
-        createPetESP(pet)
-    end
-end
-
-Workspace.DescendantAdded:Connect(function(pet)
-    if petsESPEnabled and table.find(petsToShow, pet.Name) then
-        createPetESP(pet)
-    end
 end)
 
--- ScrollingFrame para botões de players
+-- SCROLLINGFRAME PARA JOGADORES
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1,0,1,-150)
 scrollFrame.Position = UDim2.new(0,0,0,150)
@@ -209,43 +153,13 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     scrollFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
 end)
 
--- Tornar frame arrastável
-do
-    local dragging, dragInput, mousePos, framePos
-    local function update(input)
-        local delta = input.Position - mousePos
-        frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
-    end
-
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            mousePos = input.Position
-            framePos = frame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
-            end)
-        end
-    end)
-
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then update(input) end
-    end)
-end
-
--- Função para criar botões de players
+-- BOTÕES DOS JOGADORES
 local function createPlayerButton(targetPlayer)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
-    button.BackgroundColor3 = Color3.fromRGB(100,0,100)
-    button.TextColor3 = Color3.fromRGB(255,255,255) -- branco
-    button.Font = Enum.Font.GothamBold -- mais gordinho
+    button.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    button.TextColor3 = Color3.fromRGB(255,255,255)
+    button.Font = Enum.Font.GothamBold
     button.TextScaled = true
     button.Text = targetPlayer.Name
     button.Parent = scrollFrame
@@ -269,15 +183,68 @@ local function createPlayerButton(targetPlayer)
 end
 
 for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        createPlayerButton(player)
-    end
+    if player ~= LocalPlayer then createPlayerButton(player) end
 end
 
 Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        createPlayerButton(player)
+    if player ~= LocalPlayer then createPlayerButton(player) end
+end)
+
+-- PETS ESP AUTOMÁTICO (nome + valor)
+local petsBillboards = {}
+
+local function createPetESP(pet)
+    if petsBillboards[pet] then return end
+    local valuePerSecond = pet:GetAttribute("ValuePerSecond") or 0
+    if valuePerSecond < 10000000 then return end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "PetESP_Billboard"
+    billboard.Adornee = pet
+    billboard.Size = UDim2.new(0,200,0,50)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = pet
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1,0,0.5,0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.TextScaled = true
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextColor3 = Color3.fromRGB(255,255,0) -- amarelo forte
+    nameLabel.Text = pet.Name
+    nameLabel.Parent = billboard
+
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Size = UDim2.new(1,0,0.5,0)
+    valueLabel.Position = UDim2.new(0,0,0.5,0)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.TextScaled = true
+    valueLabel.Font = Enum.Font.GothamBold
+    valueLabel.TextColor3 = Color3.fromRGB(255,255,255) -- branco
+    valueLabel.Text = "Value: "..tostring(valuePerSecond).."/s"
+    valueLabel.Parent = billboard
+
+    petsBillboards[pet] = billboard
+end
+
+local function removePetESP(pet)
+    if petsBillboards[pet] then
+        petsBillboards[pet]:Destroy()
+        petsBillboards[pet] = nil
+    end
+end
+
+-- Ativação automática
+for _, pet in ipairs(Workspace:GetDescendants()) do
+    if table.find(petsToShow, pet.Name) then
+        createPetESP(pet)
+    end
+end
+
+Workspace.DescendantAdded:Connect(function(pet)
+    if table.find(petsToShow, pet.Name) then
+        createPetESP(pet)
     end
 end)
 
-print("Mgby V10 Ultra corrigido e otimizado carregado!")
+print("Mgby V11 Ultra - Pets ESP automático carregado!")
