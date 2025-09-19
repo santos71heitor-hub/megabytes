@@ -1,4 +1,4 @@
--- Mgby V12 Ultra
+-- Mgby V1
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -52,11 +52,46 @@ local frameCorner = Instance.new("UICorner")
 frameCorner.CornerRadius = UDim.new(0,15)
 frameCorner.Parent = frame
 
+-- Drag do painel
+do
+    local dragging, dragInput, mousePos, framePos
+
+    local function update(input)
+        local delta = input.Position - mousePos
+        frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+    end
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            mousePos = input.Position
+            framePos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
+
 -- Título
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V12"
+title.Text = "Mgby V1"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -240,4 +275,4 @@ Workspace.DescendantAdded:Connect(function(pet)
     end
 end)
 
-print("Mgby V12 Ultra carregado!")
+print("Mgby V1 carregado!")
