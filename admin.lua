@@ -1,4 +1,4 @@
--- Mgby V1 Compatível
+-- Mgby V2
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -47,7 +47,7 @@ screenGui.ResetOnSpawn = false
 screenGui.Parent = PlayerGui
 
 -- Frame principal centralizado
-local frameWidth, frameHeight = 250, 450
+local frameWidth, frameHeight = 250, 500
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, frameWidth, 0, frameHeight)
 frame.Position = UDim2.new(0.5, -frameWidth/2, 0.5, -frameHeight/2)
@@ -97,7 +97,7 @@ end
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V1"
+title.Text = "Mgby V2"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -169,7 +169,7 @@ end)
 
 -- SCROLLINGFRAME PARA JOGADORES
 local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1,0,1,-150)
+scrollFrame.Size = UDim2.new(1,0,1,-200)
 scrollFrame.Position = UDim2.new(0,0,0,150)
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.ScrollBarThickness = 6
@@ -224,7 +224,33 @@ Players.PlayerAdded:Connect(function(player)
     if player ~= LocalPlayer then createPlayerButton(player) end
 end)
 
--- PETS ESP AUTOMÁTICO (nome + valor)
+-- BOTÃO ESP PETS
+local petsESPEnabled = true
+local petsButton = Instance.new("TextButton")
+petsButton.Size = UDim2.new(0.9,0,0,30)
+petsButton.Position = UDim2.new(0.05,0,0,75)
+petsButton.BackgroundColor3 = Color3.fromRGB(50,50,50) -- cinza escuro
+petsButton.Font = Enum.Font.GothamBold
+petsButton.TextScaled = true
+petsButton.Parent = frame
+
+local function updatePetsButtonText()
+    if petsESPEnabled then
+        petsButton.Text = "PETS ESP ON"
+        petsButton.TextColor3 = Color3.fromRGB(0,255,0)
+    else
+        petsButton.Text = "PETS ESP OFF"
+        petsButton.TextColor3 = Color3.fromRGB(255,0,0)
+    end
+end
+updatePetsButtonText()
+
+petsButton.MouseButton1Click:Connect(function()
+    petsESPEnabled = not petsESPEnabled
+    updatePetsButtonText()
+end)
+
+-- ESP PETS AUTOMÁTICO (nome + valor)
 local petsBillboards = {}
 local function createPetESP(pet)
     if petsBillboards[pet] then return end
@@ -263,11 +289,20 @@ end
 -- Loop de verificação contínua para ESP pets
 spawn(function()
     while true do
-        for _, pet in ipairs(Workspace:GetDescendants()) do
-            if table.find(petsToShow, pet.Name) then
-                local valuePerSecond = pet:GetAttribute("ValuePerSecond")
-                if valuePerSecond and valuePerSecond >= 10000000 then
-                    createPetESP(pet)
+        if petsESPEnabled then
+            for _, pet in ipairs(Workspace:GetDescendants()) do
+                if table.find(petsToShow, pet.Name) then
+                    local valuePerSecond = pet:GetAttribute("ValuePerSecond")
+                    if valuePerSecond and valuePerSecond >= 10000000 then
+                        createPetESP(pet)
+                    end
+                end
+            end
+        else
+            for pet, billboard in pairs(petsBillboards) do
+                if billboard then
+                    billboard:Destroy()
+                    petsBillboards[pet] = nil
                 end
             end
         end
@@ -275,4 +310,4 @@ spawn(function()
     end
 end)
 
-print("Mgby V1 carregado e painel centralizado!")
+print("Mgby V2 carregado e painel centralizado!")
