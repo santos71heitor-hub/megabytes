@@ -1,4 +1,4 @@
--- Mgby V11 Ultra (Pets ESP automático e cores ajustadas)
+-- Mgby V12 Ultra
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -6,7 +6,7 @@ local Workspace = game:GetService("Workspace")
 
 local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
 
--- Lista de pets para ESP
+-- Pets para ESP
 local petsToShow = {
     "Ketchuru and Musturu",
     "Strawberry Elephant",
@@ -56,7 +56,7 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V11 Ultra"
+title.Text = "Mgby V12"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -93,7 +93,7 @@ local function updateESPForPlayer(player)
                 highlight.Name = "ESP_Highlight"
                 highlight.Adornee = player.Character
                 highlight.FillColor = Color3.fromRGB(255,140,0)
-                highlight.FillTransparency = 0.1
+                highlight.FillTransparency = 0.1 -- 90% opacidade
                 highlight.OutlineTransparency = 0.3
                 highlight.Parent = player.Character
                 playerHighlights[player] = highlight
@@ -227,13 +227,6 @@ local function createPetESP(pet)
     petsBillboards[pet] = billboard
 end
 
-local function removePetESP(pet)
-    if petsBillboards[pet] then
-        petsBillboards[pet]:Destroy()
-        petsBillboards[pet] = nil
-    end
-end
-
 -- Ativação automática
 for _, pet in ipairs(Workspace:GetDescendants()) do
     if table.find(petsToShow, pet.Name) then
@@ -247,4 +240,4 @@ Workspace.DescendantAdded:Connect(function(pet)
     end
 end)
 
-print("Mgby V11 Ultra - Pets ESP automático carregado!")
+print("Mgby V12 Ultra carregado!")
