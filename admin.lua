@@ -262,16 +262,18 @@ local function createPetESP(pet)
     petsBillboards[pet] = billboard
 end
 
--- Ativação automática
-for _, pet in ipairs(Workspace:GetDescendants()) do
-    if table.find(petsToShow, pet.Name) then
-        createPetESP(pet)
-    end
-end
-
-Workspace.DescendantAdded:Connect(function(pet)
-    if table.find(petsToShow, pet.Name) then
-        createPetESP(pet)
+-- Loop de verificação contínua para ESP pets
+spawn(function()
+    while true do
+        for _, pet in ipairs(Workspace:GetDescendants()) do
+            if table.find(petsToShow, pet.Name) then
+                local valuePerSecond = pet:GetAttribute("ValuePerSecond")
+                if valuePerSecond and valuePerSecond >= 10000000 then
+                    createPetESP(pet)
+                end
+            end
+        end
+        task.wait(0.5)
     end
 end)
 
