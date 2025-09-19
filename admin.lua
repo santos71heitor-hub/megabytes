@@ -1,4 +1,4 @@
--- Mgby V2
+-- Mgby V2 Corrigido
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -228,7 +228,7 @@ end)
 local petsESPEnabled = true
 local petsButton = Instance.new("TextButton")
 petsButton.Size = UDim2.new(0.9,0,0,30)
-petsButton.Position = UDim2.new(0.05,0,0,75)
+petsButton.Position = UDim2.new(0.05,0,0,75) -- logo abaixo do botão ESP jogadores
 petsButton.BackgroundColor3 = Color3.fromRGB(50,50,50) -- cinza escuro
 petsButton.Font = Enum.Font.GothamBold
 petsButton.TextScaled = true
@@ -310,4 +310,4 @@ spawn(function()
     end
 end)
 
-print("Mgby V2 carregado e painel centralizado!")
+print("Mgby V2 corrigido e painel centralizado com botão de pets!")
