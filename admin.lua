@@ -1,11 +1,31 @@
--- Mgby V12 - Painel Admin com ESP Players
+-- Mgby V13 - Painel Admin + ESP Players + ESP Generation
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
 
 -- Lista de comandos
 local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
+
+-- Lista de nomes para ESP Generation (seu script)
+local targetNames = {
+    ["Los Combinasionas"] = true,
+    ["La Extinct Grande"] = true
+}
+
+-- Guardar os billboards ativos do ESP Generation
+local activeBillboards = {}
+
+-- Função para converter texto em número
+local function parseNum(t)
+    t = t:gsub("[%$,]","")
+    local n,s = t:match("([%d%.]+)([KMB]?)")
+    n = tonumber(n) or 0
+    local mult={K=1e3,M=1e6,B=1e9}
+    return n*(mult[s] or 1)
+end
 
 -- Espera LocalPlayer e PlayerGui
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
@@ -38,7 +58,7 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V12"
+title.Text = "Mgby V13"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -98,8 +118,8 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     scrollFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
 end)
 
--- ESP Jogadores
-local espEnabled = true -- ativado automaticamente
+-- BOTÃO ESP JOGADORES
+local espEnabled = true -- Ativado automaticamente
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
@@ -144,17 +164,7 @@ local function toggleESP()
 end
 espButton.MouseButton1Click:Connect(toggleESP)
 
--- Ativar ESP automaticamente em todos os players existentes
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer and player.Character then
-        createHighlight(player.Character)
-        player.CharacterAdded:Connect(function(char)
-            createHighlight(char)
-        end)
-    end
-end
-
--- Criar botões para todos os players
+-- CRIAR BOTÕES PARA TODOS OS PLAYERS
 local function createPlayerButton(targetPlayer)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
@@ -193,3 +203,35 @@ Players.PlayerAdded:Connect(function(player)
         createPlayerButton(player)
     end
 end)
+
+-- ============================
+-- ESP GENERATION (integrado)
+-- ============================
+
+-- Criar Billboard do ESP Generation
+local function criarBillboardGen(basePart,name,val,id)
+    -- Destroi antigo se já existir para esse mob
+    if activeBillboards[id] then
+        activeBillboards[id]:Destroy()
+        activeBillboards[id] = nil
+    end
+
+    local bb=Instance.new("BillboardGui",CoreGui)
+    bb.Size=UDim2.new(0,200,0,50)
+    bb.Adornee=basePart
+    bb.AlwaysOnTop=true
+    bb.StudsOffset=Vector3.new(0,4,0)
+
+    local l1=Instance.new("TextLabel",bb)
+    l1.Size = UDim2.new(1,0,0.5,0)
+    l1.BackgroundTransparency = 1
+    l1.TextColor3 = Color3.fromRGB(255,255,0)
+    l1.TextStrokeTransparency = 0
+    l1.TextStrokeColor3 = Color3.new(0,0,0)
+    l1.Font = Enum.Font.GothamBold
+    l1.TextScaled = true
+    l1.Text = name or "N/A"
+
+    local l2=Instance.new("TextLabel",bb)
+    l2.Size = UDim2.new(1,0,0.5,0)
+    l2.Position = U
