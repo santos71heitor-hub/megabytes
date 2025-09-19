@@ -40,10 +40,10 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AlwaysVisibleAdminPanel"
 screenGui.Parent = PlayerGui
 
--- Frame principal
+-- Frame principal centralizado
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0,250,0,450)
-frame.Position = UDim2.new(0,1660,0,520)
+frame.Position = UDim2.new(0.5, -125, 0.5, -225) -- centralizado
 frame.BackgroundColor3 = Color3.fromRGB(0,0,0) -- painel preto
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
@@ -277,4 +277,4 @@ spawn(function()
     end
 end)
 
-print("Mgby V1 carregado!")
+print("Mgby V1 carregado e painel centralizado!")
