@@ -1,15 +1,15 @@
--- Mgby V12 - Painel Admin com ESP Jogadores ativado automaticamente
+-- Mgby V12 - Painel Admin com ESP Players
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
 -- Lista de comandos
-local commands = {"rocket","ragdoll","balloon","inverse","nightvision","jail","jumpscare"}
+local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
 
 -- Espera LocalPlayer e PlayerGui
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui",10)
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
 if not PlayerGui then warn("PlayerGui não carregou a tempo") return end
 
 -- Espera RemoteEvent
@@ -51,21 +51,30 @@ do
         local delta = input.Position - mousePos
         frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
     end
+
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             mousePos = input.Position
             framePos = frame.Position
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
             end)
         end
     end)
+
     frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
     end)
+
     UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then update(input) end
+        if input == dragInput and dragging then
+            update(input)
+        end
     end)
 end
 
@@ -94,16 +103,17 @@ local espEnabled = true -- ativado automaticamente
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
-espButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
-espButton.TextColor3 = Color3.fromRGB(0,255,0)
+espButton.BackgroundColor3 = Color3.fromRGB(50,50,50) -- cinza escuro
+espButton.TextColor3 = Color3.fromRGB(0,255,0) -- verde ON
 espButton.Text = "ESP ON"
 espButton.Font = Enum.Font.GothamBold
 espButton.TextScaled = true
 espButton.Parent = frame
 
 local function createHighlight(char)
-    if not char:FindFirstChild("ESP_Highlight") then
-        local highlight = Instance.new("Highlight")
+    local highlight = char:FindFirstChild("ESP_Highlight")
+    if not highlight then
+        highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
         highlight.Adornee = char
         highlight.FillColor = Color3.fromRGB(255,165,0)
@@ -112,14 +122,17 @@ local function createHighlight(char)
         highlight.Parent = char
     end
 end
+
 local function removeHighlight(char)
     local highlight = char:FindFirstChild("ESP_Highlight")
     if highlight then highlight:Destroy() end
 end
+
 local function toggleESP()
     espEnabled = not espEnabled
     espButton.Text = espEnabled and "ESP ON" or "ESP OFF"
     espButton.TextColor3 = espEnabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
+
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
             if espEnabled then createHighlight(player.Character) else removeHighlight(player.Character) end
@@ -131,14 +144,17 @@ local function toggleESP()
 end
 espButton.MouseButton1Click:Connect(toggleESP)
 
--- Ativar ESP nos personagens existentes
+-- Ativar ESP automaticamente em todos os players existentes
 for _, player in ipairs(Players:GetPlayers()) do
     if player ~= LocalPlayer and player.Character then
         createHighlight(player.Character)
+        player.CharacterAdded:Connect(function(char)
+            createHighlight(char)
+        end)
     end
 end
 
--- Criar botões para players
+-- Criar botões para todos os players
 local function createPlayerButton(targetPlayer)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
@@ -154,6 +170,7 @@ local function createPlayerButton(targetPlayer)
     corner.Parent = button
 
     local capturedPlayer = targetPlayer
+
     button.MouseButton1Click:Connect(function()
         task.spawn(function()
             for _, cmd in ipairs(commands) do
