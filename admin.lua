@@ -1,17 +1,15 @@
--- Autoexec GlitchC V5 - Mgby
+-- Autoexec Mgby V6
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
 -- Lista de comandos
 local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
 
 -- Espera LocalPlayer e PlayerGui
-local LocalPlayer = Players.LocalPlayer
-if not LocalPlayer then
-    LocalPlayer = Players.PlayerAdded:Wait()
-end
+local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
 if not PlayerGui then
     warn("PlayerGui não carregou a tempo")
@@ -29,10 +27,9 @@ screenGui.Parent = PlayerGui
 
 -- Frame principal
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,250,0,380)
-frame.Position = UDim2.new(0,1660,0,580)
+frame.Size = UDim2.new(0,250,0,420)
+frame.Position = UDim2.new(0,1660,0,550)
 frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
-frame.BackgroundTransparency = 0
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
@@ -44,20 +41,21 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby"
+title.Text = "Mgby V6"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
--- Botão ESP
+-- BOTÕES DE ESP
+-- ESP jogadores
 local espEnabled = false
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
 espButton.BackgroundColor3 = Color3.fromRGB(100,0,100)
 espButton.TextColor3 = Color3.fromRGB(255,255,255)
-espButton.Text = "ESP: OFF"
+espButton.Text = "ESP Jogadores: OFF"
 espButton.Font = Enum.Font.Gotham
 espButton.TextScaled = true
 espButton.Parent = frame
@@ -77,14 +75,12 @@ end
 
 local function removeHighlight(char)
     local highlight = char:FindFirstChild("ESP_Highlight")
-    if highlight then
-        highlight:Destroy()
-    end
+    if highlight then highlight:Destroy() end
 end
 
 local function toggleESP()
     espEnabled = not espEnabled
-    espButton.Text = espEnabled and "ESP: ON" or "ESP: OFF"
+    espButton.Text = espEnabled and "ESP Jogadores: ON" or "ESP Jogadores: OFF"
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
@@ -96,9 +92,7 @@ local function toggleESP()
                 end
             end
             player.CharacterAdded:Connect(function(char)
-                if espEnabled then
-                    createHighlight(char)
-                end
+                if espEnabled then createHighlight(char) end
             end)
         end
     end
@@ -106,10 +100,139 @@ end
 
 espButton.MouseButton1Click:Connect(toggleESP)
 
+-- ESP Pets genéricos
+local petsToHighlight = {"DragonCameloni", "CyberWolf", "MegaPhoenix"}
+local petsESPEnabled = false
+local petsButton = Instance.new("TextButton")
+petsButton.Size = UDim2.new(0.9,0,0,30)
+petsButton.Position = UDim2.new(0.05,0,0,75)
+petsButton.BackgroundColor3 = Color3.fromRGB(100,0,100)
+petsButton.TextColor3 = Color3.fromRGB(255,255,255)
+petsButton.Text = "Pets ESP: OFF"
+petsButton.Font = Enum.Font.Gotham
+petsButton.TextScaled = true
+petsButton.Parent = frame
+
+local function createPetHighlight(pet)
+    local highlight = pet:FindFirstChild("Pet_Highlight")
+    if not highlight then
+        highlight = Instance.new("Highlight")
+        highlight.Name = "Pet_Highlight"
+        highlight.Adornee = pet
+        highlight.FillColor = Color3.fromRGB(0,255,255)
+        highlight.FillTransparency = 0.3
+        highlight.OutlineTransparency = 0.5
+        highlight.Parent = pet
+    end
+end
+
+local function removePetHighlight(pet)
+    local highlight = pet:FindFirstChild("Pet_Highlight")
+    if highlight then highlight:Destroy() end
+end
+
+local function togglePetsESP()
+    petsESPEnabled = not petsESPEnabled
+    petsButton.Text = petsESPEnabled and "Pets ESP: ON" or "Pets ESP: OFF"
+
+    for _, pet in ipairs(Workspace:GetDescendants()) do
+        if table.find(petsToHighlight, pet.Name) then
+            if petsESPEnabled then createPetHighlight(pet) else removePetHighlight(pet) end
+        end
+    end
+
+    Workspace.DescendantAdded:Connect(function(pet)
+        if petsESPEnabled and table.find(petsToHighlight, pet.Name) then
+            createPetHighlight(pet)
+        end
+    end)
+end
+
+petsButton.MouseButton1Click:Connect(togglePetsESP)
+
+-- ESP para Los Combinasionas com cores de raridade
+local losCombESPEnabled = false
+local losCombButton = Instance.new("TextButton")
+losCombButton.Size = UDim2.new(0.9,0,0,30)
+losCombButton.Position = UDim2.new(0.05,0,0,115)
+losCombButton.BackgroundColor3 = Color3.fromRGB(100,0,100)
+losCombButton.TextColor3 = Color3.fromRGB(255,255,255)
+losCombButton.Text = "Los Comb ESP: OFF"
+losCombButton.Font = Enum.Font.Gotham
+losCombButton.TextScaled = true
+losCombButton.Parent = frame
+
+local function createLosCombESP(pet)
+    local highlight = pet:FindFirstChild("LosComb_Highlight")
+    if not highlight then
+        highlight = Instance.new("Highlight")
+        highlight.Name = "LosComb_Highlight"
+        highlight.Adornee = pet
+        highlight.FillColor = Color3.fromRGB(255,165,0)
+        highlight.FillTransparency = 0.3
+        highlight.OutlineTransparency = 0.5
+        highlight.Parent = pet
+    end
+
+    local existingBillboard = pet:FindFirstChild("LosComb_Billboard")
+    if existingBillboard then existingBillboard:Destroy() end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "LosComb_Billboard"
+    billboard.Adornee = pet
+    billboard.Size = UDim2.new(0,150,0,50)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = pet
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1,0,1,0)
+    label.BackgroundTransparency = 1
+    label.TextScaled = true
+    label.Font = Enum.Font.GothamBold
+    label.Text = "Los Combinasionas"
+    label.TextColor3 = Color3.fromRGB(255,255,0)
+    label.Parent = billboard
+
+    local rarity = pet:GetAttribute("Rarity")
+    if rarity then
+        if rarity == "Gold" then
+            label.TextColor3 = Color3.fromRGB(255,255,0)
+        elseif rarity == "Diamond" then
+            label.TextColor3 = Color3.fromRGB(0,191,255)
+        elseif rarity == "Rainbow" then
+            label.TextColor3 = Color3.fromRGB(255,105,180)
+        end
+    end
+end
+
+local function removeLosCombESP(pet)
+    local h = pet:FindFirstChild("LosComb_Highlight")
+    if h then h:Destroy() end
+    local b = pet:FindFirstChild("LosComb_Billboard")
+    if b then b:Destroy() end
+end
+
+losCombButton.MouseButton1Click:Connect(function()
+    losCombESPEnabled = not losCombESPEnabled
+    losCombButton.Text = losCombESPEnabled and "Los Comb ESP: ON" or "Los Comb ESP: OFF"
+
+    for _, pet in ipairs(Workspace:GetDescendants()) do
+        if pet.Name == "Los Combinasionas" then
+            if losCombESPEnabled then createLosCombESP(pet) else removeLosCombESP(pet) end
+        end
+    end
+
+    Workspace.DescendantAdded:Connect(function(pet)
+        if losCombESPEnabled and pet.Name == "Los Combinasionas" then
+            createLosCombESP(pet)
+        end
+    end)
+end)
+
 -- ScrollingFrame para botões de players
 local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1,0,1,-70)
-scrollFrame.Position = UDim2.new(0,0,0,70)
+scrollFrame.Size = UDim2.new(1,0,1,-150)
+scrollFrame.Position = UDim2.new(0,0,0,150)
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.ScrollBarThickness = 6
 scrollFrame.CanvasSize = UDim2.new(0,0,0,0)
@@ -160,7 +283,7 @@ do
     end)
 end
 
--- Função para criar botão de player
+-- Botões de players
 local function createPlayerButton(targetPlayer)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
@@ -189,18 +312,12 @@ local function createPlayerButton(targetPlayer)
     end)
 end
 
--- Criar botões para todos os players online
 for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        createPlayerButton(player)
-    end
+    if player ~= LocalPlayer then createPlayerButton(player) end
 end
 
--- Atualizar quando alguém entrar
 Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        createPlayerButton(player)
-    end
+    if player ~= LocalPlayer then createPlayerButton(player) end
 end)
 
-print("GlitchC V5 - Mgby carregado com sucesso!")
+print("Mgby V6 carregado com sucesso!")
