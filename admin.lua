@@ -354,16 +354,3 @@ RunService.Heartbeat:Connect(function()
 end)
 
 
--- ============================
--- Sair do servidor ao apertar T
--- ============================
-UserInputService.InputBegan:Connect(function(input, processed)
-    if processed then return end -- ignora se já estiver processado
-    if input.UserInputType == Enum.UserInputType.Keyboard then
-        if input.KeyCode == Enum.KeyCode.T then
-            -- Força a desconexão do jogador
-            LocalPlayer:Kick("$megabytes autokick")
-        end
-    end
-end)
-
