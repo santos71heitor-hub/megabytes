@@ -1,4 +1,4 @@
--- Mgby V9 - Painel Admin + ESP Players + ESP Pets (Generation) + melhorias
+-- Mgby V9 - Painel Admin + ESP Players + ESP Pets + Auto Leave (T)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -34,7 +34,7 @@ local petsToShow = {
     "Las Sis"
 }
 
--- Espera LocalPlayer e PlayerGui
+-- LocalPlayer e PlayerGui
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui",10)
 if not PlayerGui then warn("PlayerGui não carregou a tempo") return end
@@ -48,7 +48,7 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AlwaysVisibleAdminPanel"
 screenGui.Parent = PlayerGui
 
--- Frame principal centralizado
+-- Frame principal
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0,250,0,450)
 frame.AnchorPoint = Vector2.new(0.5,0.5)
@@ -126,7 +126,7 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 end)
 
 -- BOTÃO ESP JOGADORES
-local espEnabled = true -- ativado automaticamente
+local espEnabled = true
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
@@ -137,48 +137,40 @@ espButton.Font = Enum.Font.GothamBold
 espButton.TextScaled = true
 espButton.Parent = frame
 
+-- Highlight azul completo
 local function createHighlight(char)
     if char:FindFirstChild("ESP_Highlight") then return end
     local highlight = Instance.new("Highlight")
     highlight.Name = "ESP_Highlight"
     highlight.Adornee = char
     highlight.FillColor = Color3.fromRGB(0,0,255)
-    highlight.FillTransparency = 0.2
-    highlight.OutlineTransparency = 0.3
+    highlight.FillTransparency = 0.4
+    highlight.OutlineColor = Color3.fromRGB(0,0,255)
+    highlight.OutlineTransparency = 0.2
     highlight.Parent = char
 end
 
 local function removeHighlight(char)
-    local highlight = char:FindFirstChild("ESP_Highlight")
-    if highlight then highlight:Destroy() end
+    local hl = char:FindFirstChild("ESP_Highlight")
+    if hl then hl:Destroy() end
 end
 
 local function toggleESP()
     espEnabled = not espEnabled
     espButton.Text = espEnabled and "ESP ON" or "ESP OFF"
     espButton.TextColor3 = espEnabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            if espEnabled then createHighlight(player.Character) else removeHighlight(player.Character) end
-            player.CharacterAdded:Connect(function(char)
-                if espEnabled then createHighlight(char) end
-            end)
-        end
-    end
 end
 espButton.MouseButton1Click:Connect(toggleESP)
 
--- Criação de botões para players
-local playerButtons = {} -- guarda referência para remover
-local function createPlayerButton(targetPlayer)
-    if playerButtons[targetPlayer] then return end -- evita duplicação
-
+-- Criação de botões para players (painel)
+local playerButtons = {}
+local function createPlayerButton(player)
+    if playerButtons[player] then return end
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
     button.BackgroundColor3 = Color3.fromRGB(50,50,50)
     button.TextColor3 = Color3.fromRGB(255,255,255)
-    button.Text = targetPlayer.Name
+    button.Text = player.Name
     button.Font = Enum.Font.GothamBold
     button.TextScaled = true
     button.Parent = scrollFrame
@@ -187,9 +179,7 @@ local function createPlayerButton(targetPlayer)
     corner.CornerRadius = UDim.new(0,10)
     corner.Parent = button
 
-    playerButtons[targetPlayer] = button
-
-    local capturedPlayer = targetPlayer
+    local capturedPlayer = player
     button.MouseButton1Click:Connect(function()
         task.spawn(function()
             for _, cmd in ipairs(commands) do
@@ -200,6 +190,8 @@ local function createPlayerButton(targetPlayer)
             end
         end)
     end)
+
+    playerButtons[player] = button
 end
 
 local function removePlayerButton(player)
@@ -209,36 +201,43 @@ local function removePlayerButton(player)
     end
 end
 
--- Adiciona automaticamente quando entra
 for _, player in ipairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         createPlayerButton(player)
-        if espEnabled and player.Character then createHighlight(player.Character) end
     end
 end
-
 Players.PlayerAdded:Connect(function(player)
     if player ~= LocalPlayer then
         createPlayerButton(player)
-        player.CharacterAdded:Connect(function(char)
-            if espEnabled then createHighlight(char) end
-        end)
     end
 end)
-
 Players.PlayerRemoving:Connect(function(player)
     removePlayerButton(player)
 end)
 
+-- ESP Players Atualizado (nome e highlight)
+RunService.Heartbeat:Connect(function()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local char = player.Character
+            if espEnabled then
+                createHighlight(char)
+            else
+                removeHighlight(char)
+            end
+        end
+    end
+end)
+
 -- =================================================
--- ESP PETS (GENERATION) INTEGRADO COM A LISTA V4
+-- ESP PETS (GENERATION) - versão funcional
 -- =================================================
-local targetPetNames = {}
+local targetNames = {}
 for _,petName in ipairs(petsToShow) do
-    targetPetNames[petName] = true
+    targetNames[petName] = true
 end
 
-local activePetBillboards = {}
+local activeBillboards = {}
 
 local function parseNum(t)
     t = t:gsub("[%$,]","")
@@ -248,10 +247,10 @@ local function parseNum(t)
     return n*(mult[s] or 1)
 end
 
-local function criarPetBillboard(basePart,name,val,id)
-    if activePetBillboards[id] then
-        activePetBillboards[id]:Destroy()
-        activePetBillboards[id] = nil
+local function criarBillboard(basePart,name,val,id)
+    if activeBillboards[id] then
+        activeBillboards[id]:Destroy()
+        activeBillboards[id] = nil
     end
 
     -- Highlight ciano
@@ -272,12 +271,12 @@ local function criarPetBillboard(basePart,name,val,id)
     bb.StudsOffset=Vector3.new(0,4,0)
 
     local l1=Instance.new("TextLabel",bb)
-    l1.Size = UDim2.new(1,0,0.5,0)
-    l1.BackgroundTransparency = 1
-    l1.TextColor3 = Color3.fromRGB(255,255,0)
-    l1.TextStrokeTransparency = 0
-    l1.TextStrokeColor3 = Color3.new(0,0,0)
-    l1.Font = Enum.Font.GothamBold
+    l1.Size=UDim2.new(1,0,0.5,0)
+    l1.BackgroundTransparency=1
+    l1.TextColor3=Color3.fromRGB(255,255,0)
+    l1.TextStrokeTransparency=0
+    l1.TextStrokeColor3=Color3.new(0,0,0)
+    l1.Font=Enum.Font.GothamBold
     l1.TextScaled = true
     l1.Text = name or "N/A"
 
@@ -292,10 +291,10 @@ local function criarPetBillboard(basePart,name,val,id)
     l2.TextScaled = true
     l2.Text = val or "0/s"
 
-    activePetBillboards[id] = bb
+    activeBillboards[id] = bb
 end
 
--- Loop para atualizar ESP pets
+-- Loop ESP Pets
 RunService.Heartbeat:Connect(function()
     for _,o in ipairs(Workspace:GetDescendants()) do
         if o:IsA("TextLabel") and o.Name == "Generation" and not o.Text:lower():find("fusing") then
@@ -312,20 +311,18 @@ RunService.Heartbeat:Connect(function()
                 local displayName = o.Parent:FindFirstChild("DisplayName")
                 local mobName = displayName and displayName.Text or "N/A"
 
-                if targetPetNames[mobName] then
-                    criarPetBillboard(basePart, mobName, o.Text, basePart:GetDebugId())
+                if targetNames[mobName] then
+                    criarBillboard(basePart, mobName, o.Text, basePart:GetDebugId())
                 end
             end
         end
     end
 end)
 
--- =================================================
--- Sair do servidor ao apertar T
--- =================================================
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
+-- TECLA T para sair do servidor
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
     if input.KeyCode == Enum.KeyCode.T then
-        LocalPlayer:Kick("Mgbytes Autokick")
+        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
     end
 end)
