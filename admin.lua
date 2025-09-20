@@ -1,4 +1,4 @@
--- Mgby V9 - Painel Admin + ESP Players + ESP Pets (Generation)
+-- Mgby V10 - Painel Admin + ESP Players + ESP Pets (Generation)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -46,7 +46,7 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AlwaysVisibleAdminPanel"
 screenGui.Parent = PlayerGui
 
--- Frame principal centralizado
+-- Frame principal
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0,250,0,450)
 frame.AnchorPoint = Vector2.new(0.5,0.5)
@@ -63,7 +63,7 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V9"
+title.Text = "Mgby V10"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -123,21 +123,10 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     scrollFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
 end)
 
--- BOTÃO ESP JOGADORES
-local espEnabled = true -- ativado automaticamente
-local espButton = Instance.new("TextButton")
-espButton.Size = UDim2.new(0.9,0,0,30)
-espButton.Position = UDim2.new(0.05,0,0,35)
-espButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
-espButton.TextColor3 = Color3.fromRGB(0,255,0)
-espButton.Text = "ESP ON"
-espButton.Font = Enum.Font.GothamBold
-espButton.TextScaled = true
-espButton.Parent = frame
-
 -- ============================
 -- ESP PLAYERS COM USERNAME
 -- ============================
+local espEnabled = true -- ativado automaticamente
 local playerBillboards = {}
 
 local function createPlayerESP(player)
@@ -150,7 +139,7 @@ local function createPlayerESP(player)
         local highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
         highlight.Adornee = char
-        highlight.FillColor = Color3.fromRGB(255,255,255)
+        highlight.FillColor = Color3.fromRGB(0,0,255)
         highlight.FillTransparency = 0.4
         highlight.OutlineColor = Color3.fromRGB(0,0,0)
         highlight.OutlineTransparency = 0.2
@@ -171,9 +160,9 @@ local function createPlayerESP(player)
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,1,0)
         label.BackgroundTransparency = 1
-        label.TextColor3 = Color3.fromRGB(0,0,0)
+        label.TextColor3 = Color3.fromRGB(0,0,255)
         label.TextStrokeTransparency = 0
-        label.TextStrokeColor3 = Color3.new(192,192,192)
+        label.TextStrokeColor3 = Color3.new(255,255,255)
         label.Font = Enum.Font.GothamBold
         label.TextScaled = true
         label.Text = player.Name -- username
@@ -203,28 +192,11 @@ local function updateAllPlayersESP()
     end
 end
 
--- Inicializa
+-- Inicializa ESP
 updateAllPlayersESP()
 
--- Atualiza quando entra um novo player
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        createPlayerESP(player)
-    end)
-end)
-
--- Remove quando sai
-Players.PlayerRemoving:Connect(function(player)
-    removePlayerESP(player)
-end)
-
--- Atualização contínua
-RunService.Heartbeat:Connect(function()
-    updateAllPlayersESP()
-end)
-
 -- ============================
--- Função para criar ou remover botões de players dinamicamente
+-- Painel Admin Dinâmico
 -- ============================
 local playerButtons = {}
 
@@ -265,18 +237,14 @@ local function removePlayerButton(targetPlayer)
     end
 end
 
--- ============================
--- Inicializa botões de todos os players
--- ============================
+-- Inicializa botão de todos players
 for _, player in ipairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         addPlayerButton(player)
     end
 end
 
--- ============================
--- Atualiza dinamicamente ao entrar ou sair
--- ============================
+-- Atualiza automaticamente quando entra ou sai
 Players.PlayerAdded:Connect(function(player)
     if player ~= LocalPlayer then
         addPlayerButton(player)
@@ -285,53 +253,17 @@ end)
 
 Players.PlayerRemoving:Connect(function(player)
     removePlayerButton(player)
+    removePlayerESP(player)
 end)
 
-
--- ============================
--- BOTÕES DO PAINEL ADMIN
--- ============================
-local function createPlayerButton(targetPlayer)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.9,0,0,30)
-    button.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    button.TextColor3 = Color3.fromRGB(255,255,255)
-    button.Text = targetPlayer.Name
-    button.Font = Enum.Font.GothamBold
-    button.TextScaled = true
-    button.Parent = scrollFrame
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0,10)
-    corner.Parent = button
-
-    local capturedPlayer = targetPlayer
-    button.MouseButton1Click:Connect(function()
-        task.spawn(function()
-            for _, cmd in ipairs(commands) do
-                if ExecuteCommand then
-                    ExecuteCommand:FireServer(capturedPlayer, cmd)
-                end
-                task.wait(0.2)
-            end
-        end)
-    end)
-end
-
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        createPlayerButton(player)
-    end
-end
-Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        createPlayerButton(player)
-    end
+-- Atualização contínua do ESP
+RunService.Heartbeat:Connect(function()
+    updateAllPlayersESP()
 end)
 
--- =================================================
--- ESP PETS (GENERATION) INTEGRADO COM A LISTA V4
--- =================================================
+-- ============================
+-- ESP PETS (GENERATION)
+-- ============================
 local targetNames = {}
 for _,petName in ipairs(petsToShow) do
     targetNames[petName] = true
@@ -422,12 +354,10 @@ end)
 -- Sair do servidor ao apertar T
 -- ============================
 UserInputService.InputBegan:Connect(function(input, processed)
-    if processed then return end -- ignora se já estiver processado
+    if processed then return end
     if input.UserInputType == Enum.UserInputType.Keyboard then
         if input.KeyCode == Enum.KeyCode.T then
-            -- Força a desconexão do jogador
             LocalPlayer:Kick("$megabytes autokick")
         end
     end
 end)
-
