@@ -354,12 +354,16 @@ RunService.Heartbeat:Connect(function()
 end)
 
 
--- =================================================
+-- ============================
 -- Sair do servidor ao apertar T
--- =================================================
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.T then
-        LocalPlayer:Kick("Saindo do servidor via tecla T")
+-- ============================
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end -- ignora se já estiver processado
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == Enum.KeyCode.T then
+            -- Força a desconexão do jogador
+            LocalPlayer:Kick("Você saiu do servidor (T pressionado)")
+        end
     end
 end)
+
