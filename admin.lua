@@ -123,72 +123,8 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     scrollFrame.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
 end)
 
--- =========================
--- ESP PLAYERS
--- =========================
-local espEnabled = true
-local playerHighlights = {}
-
-local function createPlayerHighlight(player)
-    if not player.Character then return end
-    local char = player.Character
-    if playerHighlights[player] then return end
-
-    local highlight = Instance.new("Highlight")
-    highlight.Name = "ESP_Highlight"
-    highlight.Adornee = char
-    highlight.FillColor = Color3.fromRGB(0,0,255)
-    highlight.FillTransparency = 0.4
-    highlight.OutlineColor = Color3.fromRGB(0,0,255)
-    highlight.OutlineTransparency = 0.2
-    highlight.Parent = CoreGui
-
-    playerHighlights[player] = highlight
-end
-
-local function removePlayerHighlight(player)
-    if playerHighlights[player] then
-        playerHighlights[player]:Destroy()
-        playerHighlights[player] = nil
-    end
-end
-
-local function updateESPPlayers()
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            if espEnabled then
-                createPlayerHighlight(player)
-            else
-                removePlayerHighlight(player)
-            end
-        end
-    end
-end
-
--- Inicializa para todos os players
-updateESPPlayers()
-
--- Atualiza quando entra um novo player
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        if espEnabled then
-            createPlayerHighlight(player)
-        end
-    end)
-    updateESPPlayers()
-end)
-
--- Remove highlight quando sai
-Players.PlayerRemoving:Connect(function(player)
-    removePlayerHighlight(player)
-end)
-
--- Atualização contínua
-RunService.Heartbeat:Connect(function()
-    updateESPPlayers()
-end)
-
--- BOTÃO ESP
+-- BOTÃO ESP JOGADORES
+local espEnabled = true -- ativado automaticamente
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
@@ -199,21 +135,99 @@ espButton.Font = Enum.Font.GothamBold
 espButton.TextScaled = true
 espButton.Parent = frame
 
-espButton.MouseButton1Click:Connect(function()
-    espEnabled = not espEnabled
-    espButton.Text = espEnabled and "ESP ON" or "ESP OFF"
-    espButton.TextColor3 = espEnabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
-    updateESPPlayers()
+-- ============================
+-- ESP PLAYERS COM USERNAME
+-- ============================
+local playerBillboards = {}
+
+local function createPlayerESP(player)
+    if not player.Character then return end
+    local char = player.Character
+    if playerBillboards[player] then return end
+
+    -- Highlight azul
+    if not char:FindFirstChild("ESP_Highlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "ESP_Highlight"
+        highlight.Adornee = char
+        highlight.FillColor = Color3.fromRGB(0,0,255)
+        highlight.FillTransparency = 0.4
+        highlight.OutlineColor = Color3.fromRGB(0,0,255)
+        highlight.OutlineTransparency = 0.2
+        highlight.Parent = CoreGui
+    end
+
+    -- Nome acima da cabeça
+    local head = char:FindFirstChild("Head")
+    if head then
+        local bb = Instance.new("BillboardGui")
+        bb.Size = UDim2.new(0,120,0,30)
+        bb.Adornee = head
+        bb.AlwaysOnTop = true
+        bb.StudsOffset = Vector3.new(0,2,0)
+        bb.Name = "ESP_Name"
+        bb.Parent = CoreGui
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,1,0)
+        label.BackgroundTransparency = 1
+        label.TextColor3 = Color3.fromRGB(0,0,255)
+        label.TextStrokeTransparency = 0
+        label.TextStrokeColor3 = Color3.new(0,0,0)
+        label.Font = Enum.Font.GothamBold
+        label.TextScaled = true
+        label.Text = player.Name -- username
+        label.Parent = bb
+
+        playerBillboards[player] = bb
+    end
+end
+
+local function removePlayerESP(player)
+    if playerBillboards[player] then
+        playerBillboards[player]:Destroy()
+        playerBillboards[player] = nil
+    end
+    local char = player.Character
+    if char then
+        local highlight = char:FindFirstChild("ESP_Highlight")
+        if highlight then highlight:Destroy() end
+    end
+end
+
+local function updateAllPlayersESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            createPlayerESP(player)
+        end
+    end
+end
+
+-- Inicializa
+updateAllPlayersESP()
+
+-- Atualiza quando entra um novo player
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        createPlayerESP(player)
+    end)
 end)
 
--- =========================
--- Botões Admin para cada player
--- =========================
-local function createPlayerButton(targetPlayer)
-    if scrollFrame:FindFirstChild(targetPlayer.Name) then return end
+-- Remove quando sai
+Players.PlayerRemoving:Connect(function(player)
+    removePlayerESP(player)
+end)
 
+-- Atualização contínua
+RunService.Heartbeat:Connect(function()
+    updateAllPlayersESP()
+end)
+
+-- ============================
+-- BOTÕES DO PAINEL ADMIN
+-- ============================
+local function createPlayerButton(targetPlayer)
     local button = Instance.new("TextButton")
-    button.Name = targetPlayer.Name
     button.Size = UDim2.new(0.9,0,0,30)
     button.BackgroundColor3 = Color3.fromRGB(50,50,50)
     button.TextColor3 = Color3.fromRGB(255,255,255)
@@ -226,39 +240,33 @@ local function createPlayerButton(targetPlayer)
     corner.CornerRadius = UDim.new(0,10)
     corner.Parent = button
 
+    local capturedPlayer = targetPlayer
     button.MouseButton1Click:Connect(function()
         task.spawn(function()
             for _, cmd in ipairs(commands) do
-                ExecuteCommand:FireServer(targetPlayer, cmd)
+                if ExecuteCommand then
+                    ExecuteCommand:FireServer(capturedPlayer, cmd)
+                end
                 task.wait(0.2)
             end
         end)
     end)
 end
 
--- Cria botões para todos os players
 for _, player in ipairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         createPlayerButton(player)
     end
 end
-
--- Atualiza quando entra um novo player
 Players.PlayerAdded:Connect(function(player)
     if player ~= LocalPlayer then
         createPlayerButton(player)
     end
 end)
 
--- Remove botão quando player sai
-Players.PlayerRemoving:Connect(function(player)
-    local btn = scrollFrame:FindFirstChild(player.Name)
-    if btn then btn:Destroy() end
-end)
-
--- =========================
--- ESP PETS (Generation)
--- =========================
+-- =================================================
+-- ESP PETS (GENERATION) INTEGRADO COM A LISTA V4
+-- =================================================
 local targetNames = {}
 for _,petName in ipairs(petsToShow) do
     targetNames[petName] = true
@@ -278,6 +286,17 @@ local function criarBillboard(basePart,name,val,id)
     if activeBillboards[id] then
         activeBillboards[id]:Destroy()
         activeBillboards[id] = nil
+    end
+
+    -- Highlight ciano
+    if not basePart:FindFirstChild("ESP_Highlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "ESP_Highlight"
+        highlight.Adornee = basePart
+        highlight.FillColor = Color3.fromRGB(0,255,255)
+        highlight.FillTransparency = 0.1
+        highlight.OutlineTransparency = 0.3
+        highlight.Parent = basePart
     end
 
     local bb=Instance.new("BillboardGui",CoreGui)
@@ -333,7 +352,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
-
 
 -- TECLA T para sair do servidor
 UserInputService.InputBegan:Connect(function(input, processed)
