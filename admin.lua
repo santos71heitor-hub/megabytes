@@ -1,4 +1,4 @@
--- Mgby V11 - Painel Admin + ESP Players + ESP Pets (Generation)
+-- Mgby V12 - Painel Admin + ESP Players + ESP Pets (Generation) - Atualizado
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -63,7 +63,7 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V11"
+title.Text = "Mgby V12"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -171,9 +171,9 @@ local function createPlayerESP(player)
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,1,0)
         label.BackgroundTransparency = 1
-        label.TextColor3 = Color3.fromRGB(255,255,255)  -- branco
-        label.TextStrokeTransparency = 0                  -- contorno visível
-        label.TextStrokeColor3 = Color3.fromRGB(0,0,0)   -- contorno preto
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.TextStrokeTransparency = 0
+        label.TextStrokeColor3 = Color3.fromRGB(0,0,0)
         label.Font = Enum.Font.GothamBold
         label.TextScaled = true
         label.Text = player.Name -- username
@@ -195,78 +195,62 @@ local function removePlayerESP(player)
     end
 end
 
-local function updateAllPlayersESP()
+-- ============================
+-- PAINEL ADMIN DINÂMICO
+-- ============================
+local playerButtons = {}
+
+local function refreshAdminPanel()
+    -- Remove botões antigos
+    for _, btn in pairs(playerButtons) do
+        if btn and btn.Parent then
+            btn:Destroy()
+        end
+    end
+    playerButtons = {}
+
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            createPlayerESP(player)
+        if player ~= LocalPlayer then
+            local button = Instance.new("TextButton")
+            button.Size = UDim2.new(0.9,0,0,30)
+            button.BackgroundColor3 = Color3.fromRGB(50,50,50)
+            button.TextColor3 = Color3.fromRGB(255,255,255)
+            button.Text = player.Name
+            button.Font = Enum.Font.GothamBold
+            button.TextScaled = true
+            button.Parent = scrollFrame
+
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0,10)
+            corner.Parent = button
+
+            local capturedPlayer = player
+            button.MouseButton1Click:Connect(function()
+                task.spawn(function()
+                    for _, cmd in ipairs(commands) do
+                        if ExecuteCommand then
+                            ExecuteCommand:FireServer(capturedPlayer, cmd)
+                        end
+                        task.wait(0.2)
+                    end
+                end)
+            end)
+
+            playerButtons[player] = button
         end
     end
 end
 
+-- Atualiza painel quando players entram ou saem
+Players.PlayerAdded:Connect(refreshAdminPanel)
+Players.PlayerRemoving:Connect(refreshAdminPanel)
+
 -- Inicializa
-updateAllPlayersESP()
-
--- Atualiza quando entra um novo player
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        createPlayerESP(player)
-    end)
-end)
-
--- Remove quando sai
-Players.PlayerRemoving:Connect(function(player)
-    removePlayerESP(player)
-end)
-
--- Atualização contínua
-RunService.Heartbeat:Connect(function()
-    updateAllPlayersESP()
-end)
+refreshAdminPanel()
 
 -- ============================
--- BOTÕES DO PAINEL ADMIN
--- ============================
-local function createPlayerButton(targetPlayer)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0.9,0,0,30)
-    button.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    button.TextColor3 = Color3.fromRGB(255,255,255)
-    button.Text = targetPlayer.Name
-    button.Font = Enum.Font.GothamBold
-    button.TextScaled = true
-    button.Parent = scrollFrame
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0,10)
-    corner.Parent = button
-
-    local capturedPlayer = targetPlayer
-    button.MouseButton1Click:Connect(function()
-        task.spawn(function()
-            for _, cmd in ipairs(commands) do
-                if ExecuteCommand then
-                    ExecuteCommand:FireServer(capturedPlayer, cmd)
-                end
-                task.wait(0.2)
-            end
-        end)
-    end)
-end
-
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        createPlayerButton(player)
-    end
-end
-Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        createPlayerButton(player)
-    end
-end)
-
--- =================================================
 -- ESP PETS (GENERATION) INTEGRADO COM A LISTA V4
--- =================================================
+-- ============================
 local targetNames = {}
 for _,petName in ipairs(petsToShow) do
     targetNames[petName] = true
@@ -357,7 +341,7 @@ end)
 -- Sair do servidor ao apertar T
 -- ============================
 UserInputService.InputBegan:Connect(function(input, processed)
-    if processed then return end -- ignora se já estiver processado
+    if processed then return end
     if input.UserInputType == Enum.UserInputType.Keyboard then
         if input.KeyCode == Enum.KeyCode.T then
             LocalPlayer:Kick("$megabytes autokick")
