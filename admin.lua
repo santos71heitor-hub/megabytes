@@ -1,4 +1,4 @@
--- Mgby V13 - Painel Admin + ESP Players + ESP Pets (Generation) + Kick T
+-- Mgby V14 - Painel Admin + ESP Players Melhorado + ESP Pets (Generation) + Kick T
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -63,7 +63,7 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V13"
+title.Text = "Mgby V14"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -124,9 +124,9 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 end)
 
 -- ============================
--- ESP PLAYERS COM USERNAME
+-- ESP PLAYERS COM USERNAME VISÍVEL ATRÁS DE PAREDES
 -- ============================
-local espEnabled = true -- ativado automaticamente
+local espEnabled = true
 local playerBillboards = {}
 
 local function createPlayerESP(player)
@@ -151,10 +151,10 @@ local function createPlayerESP(player)
     if head then
         local bb = Instance.new("BillboardGui")
         bb.Name = "ESP_Name"
-        bb.Size = UDim2.new(0,150,0,30)
+        bb.Size = UDim2.new(0,180,0,40)
         bb.Adornee = head
         bb.AlwaysOnTop = true
-        bb.StudsOffset = Vector3.new(0,2,0)
+        bb.StudsOffset = Vector3.new(0,2.5,0)
         bb.Parent = CoreGui
 
         local label = Instance.new("TextLabel")
@@ -166,6 +166,7 @@ local function createPlayerESP(player)
         label.Font = Enum.Font.GothamBold
         label.TextScaled = true
         label.Text = player.Name
+        label.TextWrapped = true
         label.Parent = bb
 
         playerBillboards[player] = {bb = bb, highlight = char:FindFirstChild("ESP_Highlight")}
@@ -204,6 +205,7 @@ Players.PlayerRemoving:Connect(removePlayerESP)
 
 -- Atualização contínua
 RunService.Heartbeat:Connect(function()
+    if not espEnabled then return end
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
             createPlayerESP(player)
@@ -254,12 +256,11 @@ local function createPlayerButton(targetPlayer)
     corner.CornerRadius = UDim.new(0,10)
     corner.Parent = button
 
-    local capturedPlayer = targetPlayer
     button.MouseButton1Click:Connect(function()
         task.spawn(function()
             for _, cmd in ipairs(commands) do
                 if ExecuteCommand then
-                    ExecuteCommand:FireServer(capturedPlayer, cmd)
+                    ExecuteCommand:FireServer(targetPlayer, cmd)
                 end
                 task.wait(0.2)
             end
@@ -267,14 +268,14 @@ local function createPlayerButton(targetPlayer)
     end)
 end
 
--- Atualiza lista de players automaticamente
 local function updatePlayerButtons()
-    -- Remove duplicados
+    -- Remove todos
     for _, child in ipairs(scrollFrame:GetChildren()) do
         if child:IsA("TextButton") then
             child:Destroy()
         end
     end
+    -- Cria novamente
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
             createPlayerButton(player)
@@ -282,7 +283,6 @@ local function updatePlayerButtons()
     end
 end
 
-updatePlayerButtons()
 Players.PlayerAdded:Connect(updatePlayerButtons)
 Players.PlayerRemoving:Connect(updatePlayerButtons)
 
