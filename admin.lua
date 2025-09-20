@@ -146,30 +146,29 @@ local function createPlayerESP(player)
         highlight.Parent = CoreGui
     end
 
-    -- Nome acima da cabeça
-    local head = char:FindFirstChild("Head")
-    if head then
-        local bb = Instance.new("BillboardGui")
-        bb.Size = UDim2.new(0,120,0,30)
-        bb.Adornee = head
-        bb.AlwaysOnTop = true
-        bb.StudsOffset = Vector3.new(0,2,0)
-        bb.Name = "ESP_Name"
-        bb.Parent = CoreGui
+-- Nome acima da cabeça
+local head = char:FindFirstChild("Head")
+if head then
+    local bb = Instance.new("BillboardGui")
+    bb.Size = UDim2.new(0,120,0,30)
+    bb.Adornee = head
+    bb.AlwaysOnTop = true
+    bb.StudsOffset = Vector3.new(0,2,0)
+    bb.Name = "ESP_Name"
+    bb.Parent = CoreGui
 
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1,0,1,0)
-        label.BackgroundTransparency = 1
-        label.TextColor3 = Color3.fromRGB(0,0,255)
-        label.TextStrokeTransparency = 0
-        label.TextStrokeColor3 = Color3.new(255,255,255)
-        label.Font = Enum.Font.GothamBold
-        label.TextScaled = true
-        label.Text = player.Name -- username
-        label.Parent = bb
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1,0,1,0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(255,255,255)  -- nome branco
+    label.TextStrokeTransparency = 0                  -- contorno visível
+    label.TextStrokeColor3 = Color3.fromRGB(0,0,0)   -- contorno preto
+    label.Font = Enum.Font.GothamBold
+    label.TextScaled = true
+    label.Text = player.Name -- username
+    label.Parent = bb
 
-        playerBillboards[player] = bb
-    end
+    playerBillboards[player] = bb
 end
 
 local function removePlayerESP(player)
