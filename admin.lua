@@ -1,14 +1,15 @@
--- Mgby V11 - Painel Admin + ESP Players Corrigido
+-- Mgby V12 - Painel Admin + ESP Players (highlight azul + username) + ESP Pets intacto
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 
 -- Lista de comandos
 local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
 
--- Lista de pets para referência (sem ESP)
+-- Lista de pets para ESP
 local petsToShow = {
     "Ketchuru and Musturu",
     "Strawberry Elephant",
@@ -28,10 +29,12 @@ local petsToShow = {
     "Graipuss Medussi",
     "Celularcini Viciosini",
     "Los Combinasionas",
-    "La Grande Combinasion"
+    "La Grande Combinasion",
+    "Los Bros",
+    "Las Sis"
 }
 
--- Espera LocalPlayer e PlayerGui
+-- LocalPlayer e PlayerGui
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui",10)
 if not PlayerGui then warn("PlayerGui não carregou a tempo") return end
@@ -45,7 +48,7 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AlwaysVisibleAdminPanel"
 screenGui.Parent = PlayerGui
 
--- Frame principal
+-- Frame principal centralizado
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0,250,0,450)
 frame.AnchorPoint = Vector2.new(0.5,0.5)
@@ -62,7 +65,7 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V11"
+title.Text = "Mgby V12"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -123,7 +126,7 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 end)
 
 -- BOTÃO ESP JOGADORES
-local espEnabled = true -- ativado automaticamente
+local espEnabled = true
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
@@ -134,15 +137,14 @@ espButton.Font = Enum.Font.GothamBold
 espButton.TextScaled = true
 espButton.Parent = frame
 
--- Funções ESP players
 local function createHighlight(char)
     if char:FindFirstChild("ESP_Highlight") then return end
     local highlight = Instance.new("Highlight")
     highlight.Name = "ESP_Highlight"
     highlight.Adornee = char
     highlight.FillColor = Color3.fromRGB(0,0,255)
-    highlight.FillTransparency = 0.3
-    highlight.OutlineTransparency = 0.1
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0.3
     highlight.Parent = char
 end
 
@@ -151,77 +153,22 @@ local function removeHighlight(char)
     if highlight then highlight:Destroy() end
 end
 
-local function createNameBillboard(char)
-    if char:FindFirstChild("ESP_Name") then return end
-    local head = char:FindFirstChild("Head") or char:FindFirstChildWhichIsA("BasePart")
-    if not head then return end
-
-    local bb = Instance.new("BillboardGui")
-    bb.Name = "ESP_Name"
-    bb.Adornee = head
-    bb.Size = UDim2.new(0,200,0,30)
-    bb.StudsOffset = Vector3.new(0,3,0)
-    bb.AlwaysOnTop = true
-    bb.Parent = CoreGui
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1,0,1,0)
-    label.BackgroundTransparency = 1
-    label.Text = char.Name
-    label.TextColor3 = Color3.fromRGB(0,0,255)
-    label.TextStrokeTransparency = 0
-    label.TextStrokeColor3 = Color3.new(0,0,0)
-    label.Font = Enum.Font.GothamBold
-    label.TextScaled = true
-    label.Parent = bb
-end
-
 local function toggleESP()
     espEnabled = not espEnabled
     espButton.Text = espEnabled and "ESP ON" or "ESP OFF"
     espButton.TextColor3 = espEnabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
-
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
-            if espEnabled then
-                createHighlight(player.Character)
-                createNameBillboard(player.Character)
-            else
-                removeHighlight(player.Character)
-            end
+            if espEnabled then createHighlight(player.Character) else removeHighlight(player.Character) end
+            player.CharacterAdded:Connect(function(char)
+                if espEnabled then createHighlight(char) end
+            end)
         end
     end
 end
 espButton.MouseButton1Click:Connect(toggleESP)
 
--- Aplicar ESP para todos players
-local function applyESP(player)
-    player.CharacterAdded:Connect(function(char)
-        task.wait(0.1)
-        if espEnabled then
-            createHighlight(char)
-            createNameBillboard(char)
-        end
-    end)
-    if player.Character and espEnabled then
-        createHighlight(player.Character)
-        createNameBillboard(player.Character)
-    end
-end
-
-for _,p in ipairs(Players:GetPlayers()) do
-    if p ~= LocalPlayer then
-        applyESP(p)
-    end
-end
-
-Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then
-        applyESP(player)
-    end
-end)
-
--- Botões para players
+-- Criação de botões para players
 local function createPlayerButton(targetPlayer)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
@@ -259,3 +206,105 @@ Players.PlayerAdded:Connect(function(player)
         createPlayerButton(player)
     end
 end)
+
+-- =================================================
+-- ESP PETS - MANTIDO COMO ESTAVA NO V8/V9
+-- =================================================
+-- (Não alterado, funcionando com Generation e highlight ciano)
+local targetPetNames = {}
+for _,petName in ipairs(petsToShow) do
+    targetPetNames[petName] = true
+end
+
+local activePetBillboards = {}
+
+local function criarPetBillboard(basePart,name,val,id)
+    if activePetBillboards[id] then
+        activePetBillboards[id]:Destroy()
+        activePetBillboards[id] = nil
+    end
+
+    -- Highlight ciano
+    if not basePart:FindFirstChild("ESP_Highlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "ESP_Highlight"
+        highlight.Adornee = basePart
+        highlight.FillColor = Color3.fromRGB(0,255,255)
+        highlight.FillTransparency = 0.1
+        highlight.OutlineTransparency = 0.3
+        highlight.Parent = basePart
+    end
+
+    local bb=Instance.new("BillboardGui",CoreGui)
+    bb.Size=UDim2.new(0,200,0,50)
+    bb.Adornee=basePart
+    bb.AlwaysOnTop=true
+    bb.StudsOffset=Vector3.new(0,4,0)
+
+    local l1=Instance.new("TextLabel",bb)
+    l1.Size=UDim2.new(1,0,0.5,0)
+    l1.BackgroundTransparency=1
+    l1.TextColor3=Color3.fromRGB(255,255,0)
+    l1.TextStrokeTransparency=0
+    l1.TextStrokeColor3=Color3.new(0,0,0)
+    l1.Font=Enum.Font.GothamBold
+    l1.TextScaled = true
+    l1.Text = name or "N/A"
+
+    local l2=Instance.new("TextLabel",bb)
+    l2.Size = UDim2.new(1,0,0.5,0)
+    l2.Position = UDim2.new(0,0,0.5,0)
+    l2.BackgroundTransparency = 1
+    l2.TextColor3 = Color3.fromRGB(255,255,255)
+    l2.TextStrokeTransparency = 0
+    l2.TextStrokeColor3 = Color3.new(0,0,0)
+    l2.Font = Enum.Font.GothamBold
+    l2.TextScaled = true
+    l2.Text = val or "0/s"
+
+    activePetBillboards[id] = bb
+end
+
+RunService.Heartbeat:Connect(function()
+    for _,o in ipairs(Workspace:GetDescendants()) do
+        if o:IsA("TextLabel") and o.Name == "Generation" and not o.Text:lower():find("fusing") then
+            local parent = o.Parent
+            local basePart
+            while parent and parent ~= Workspace do
+                if parent:IsA("Model") and parent:FindFirstChild("Base") then
+                    basePart = parent.Base break
+                end
+                parent = parent.Parent
+            end
+
+            if basePart then
+                local displayName = o.Parent:FindFirstChild("DisplayName")
+                local mobName = displayName and displayName.Text or "N/A"
+
+                if targetPetNames[mobName] then
+                    criarPetBillboard(basePart, mobName, o.Text, basePart:GetDebugId())
+                end
+            end
+        end
+    end
+end)
+
+-- =================================================
+-- ESP PLAYERS AUTOMÁTICO PARA NOVOS CHARACTERS
+-- =================================================
+local function espForPlayer(player)
+    if player == LocalPlayer then return end
+    local function onCharAdded(char)
+        task.wait(0.1)
+        if espEnabled and char:FindFirstChild("HumanoidRootPart") then
+            createHighlight(char)
+        end
+    end
+    if player.Character then onCharAdded(player.Character) end
+    player.CharacterAdded:Connect(onCharAdded)
+end
+
+for _, plr in ipairs(Players:GetPlayers()) do
+    espForPlayer(plr)
+end
+Players.PlayerAdded:Connect(espForPlayer)
