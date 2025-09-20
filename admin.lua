@@ -173,7 +173,7 @@ local function createPlayerESP(player)
         label.BackgroundTransparency = 1
         label.TextColor3 = Color3.fromRGB(0,0,0)
         label.TextStrokeTransparency = 0
-        label.TextStrokeColor3 = Color3.new(255,255,255)
+        label.TextStrokeColor3 = Color3.new(192,192,192)
         label.Font = Enum.Font.GothamBold
         label.TextScaled = true
         label.Text = player.Name -- username
