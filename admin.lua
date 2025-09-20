@@ -224,6 +224,71 @@ RunService.Heartbeat:Connect(function()
 end)
 
 -- ============================
+-- Função para criar ou remover botões de players dinamicamente
+-- ============================
+local playerButtons = {}
+
+local function addPlayerButton(targetPlayer)
+    if playerButtons[targetPlayer] then return end
+
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.9,0,0,30)
+    button.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    button.TextColor3 = Color3.fromRGB(255,255,255)
+    button.Text = targetPlayer.Name
+    button.Font = Enum.Font.GothamBold
+    button.TextScaled = true
+    button.Parent = scrollFrame
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0,10)
+    corner.Parent = button
+
+    button.MouseButton1Click:Connect(function()
+        task.spawn(function()
+            for _, cmd in ipairs(commands) do
+                if ExecuteCommand then
+                    ExecuteCommand:FireServer(targetPlayer, cmd)
+                end
+                task.wait(0.2)
+            end
+        end)
+    end)
+
+    playerButtons[targetPlayer] = button
+end
+
+local function removePlayerButton(targetPlayer)
+    if playerButtons[targetPlayer] then
+        playerButtons[targetPlayer]:Destroy()
+        playerButtons[targetPlayer] = nil
+    end
+end
+
+-- ============================
+-- Inicializa botões de todos os players
+-- ============================
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        addPlayerButton(player)
+    end
+end
+
+-- ============================
+-- Atualiza dinamicamente ao entrar ou sair
+-- ============================
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        addPlayerButton(player)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    removePlayerButton(player)
+end)
+
+
+-- ============================
 -- BOTÕES DO PAINEL ADMIN
 -- ============================
 local function createPlayerButton(targetPlayer)
@@ -365,3 +430,4 @@ UserInputService.InputBegan:Connect(function(input, processed)
         end
     end
 end)
+
