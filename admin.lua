@@ -1,13 +1,35 @@
--- Mgby V11 - Painel Admin + ESP Players (Highlight + Nome)
+-- Mgby V11 - Painel Admin + ESP Players Corrigido
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 
 -- Lista de comandos
 local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jail", "jumpscare"}
+
+-- Lista de pets para referência (sem ESP)
+local petsToShow = {
+    "Ketchuru and Musturu",
+    "Strawberry Elephant",
+    "Ketupat Kepat",
+    "La Supreme Combinasion",
+    "Tralaledon",
+    "Celularcini Viciosini",
+    "Los Noo My Hotspotsitos",
+    "Spaghetti Tualetti",
+    "Esok Sekolah",
+    "Los Hotspotsitos",
+    "Dragon Cannelloni",
+    "Chicleteira Bicicleteira",
+    "La Extinct Grande",
+    "Garama and Madundung",
+    "Nuclearo Dinossauro",
+    "Graipuss Medussi",
+    "Celularcini Viciosini",
+    "Los Combinasionas",
+    "La Grande Combinasion"
+}
 
 -- Espera LocalPlayer e PlayerGui
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
@@ -112,13 +134,13 @@ espButton.Font = Enum.Font.GothamBold
 espButton.TextScaled = true
 espButton.Parent = frame
 
--- FUNÇÕES DE ESP
+-- Funções ESP players
 local function createHighlight(char)
     if char:FindFirstChild("ESP_Highlight") then return end
     local highlight = Instance.new("Highlight")
     highlight.Name = "ESP_Highlight"
     highlight.Adornee = char
-    highlight.FillColor = Color3.fromRGB(0,0,255) -- azul
+    highlight.FillColor = Color3.fromRGB(0,0,255)
     highlight.FillTransparency = 0.3
     highlight.OutlineTransparency = 0.1
     highlight.Parent = char
@@ -131,9 +153,12 @@ end
 
 local function createNameBillboard(char)
     if char:FindFirstChild("ESP_Name") then return end
+    local head = char:FindFirstChild("Head") or char:FindFirstChildWhichIsA("BasePart")
+    if not head then return end
+
     local bb = Instance.new("BillboardGui")
     bb.Name = "ESP_Name"
-    bb.Adornee = char:FindFirstChild("Head") or char:FindFirstChildWhichIsA("BasePart")
+    bb.Adornee = head
     bb.Size = UDim2.new(0,200,0,30)
     bb.StudsOffset = Vector3.new(0,3,0)
     bb.AlwaysOnTop = true
@@ -142,7 +167,7 @@ local function createNameBillboard(char)
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1,0,1,0)
     label.BackgroundTransparency = 1
-    label.Text = char.Name -- username
+    label.Text = char.Name
     label.TextColor3 = Color3.fromRGB(0,0,255)
     label.TextStrokeTransparency = 0
     label.TextStrokeColor3 = Color3.new(0,0,0)
@@ -151,49 +176,86 @@ local function createNameBillboard(char)
     label.Parent = bb
 end
 
-local function removeNameBillboard(char)
-    local bb = char:FindFirstChild("ESP_Name") or CoreGui:FindFirstChild("ESP_Name")
-    if bb then bb:Destroy() end
-end
-
-local function applyESP(player)
-    if player == LocalPlayer then return end
-    if player.Character then
-        createHighlight(player.Character)
-        createNameBillboard(player.Character)
-        player.CharacterAdded:Connect(function(char)
-            if espEnabled then
-                createHighlight(char)
-                createNameBillboard(char)
-            end
-        end)
-    end
-end
-
--- Ativar ESP para todos
-for _,p in ipairs(Players:GetPlayers()) do
-    applyESP(p)
-end
-
--- Aplicar para novos players
-Players.PlayerAdded:Connect(function(player)
-    if espEnabled then
-        applyESP(player)
-    end
-end)
-
--- Alternar ESP
-espButton.MouseButton1Click:Connect(function()
+local function toggleESP()
     espEnabled = not espEnabled
     espButton.Text = espEnabled and "ESP ON" or "ESP OFF"
     espButton.TextColor3 = espEnabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
 
-    for _,p in ipairs(Players:GetPlayers()) do
-        if espEnabled then
-            applyESP(p)
-        else
-            removeHighlight(p.Character)
-            removeNameBillboard(p.Character)
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            if espEnabled then
+                createHighlight(player.Character)
+                createNameBillboard(player.Character)
+            else
+                removeHighlight(player.Character)
+            end
         end
+    end
+end
+espButton.MouseButton1Click:Connect(toggleESP)
+
+-- Aplicar ESP para todos players
+local function applyESP(player)
+    player.CharacterAdded:Connect(function(char)
+        task.wait(0.1)
+        if espEnabled then
+            createHighlight(char)
+            createNameBillboard(char)
+        end
+    end)
+    if player.Character and espEnabled then
+        createHighlight(player.Character)
+        createNameBillboard(player.Character)
+    end
+end
+
+for _,p in ipairs(Players:GetPlayers()) do
+    if p ~= LocalPlayer then
+        applyESP(p)
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        applyESP(player)
+    end
+end)
+
+-- Botões para players
+local function createPlayerButton(targetPlayer)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.9,0,0,30)
+    button.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    button.TextColor3 = Color3.fromRGB(255,255,255)
+    button.Text = targetPlayer.Name
+    button.Font = Enum.Font.GothamBold
+    button.TextScaled = true
+    button.Parent = scrollFrame
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0,10)
+    corner.Parent = button
+
+    local capturedPlayer = targetPlayer
+    button.MouseButton1Click:Connect(function()
+        task.spawn(function()
+            for _, cmd in ipairs(commands) do
+                if ExecuteCommand then
+                    ExecuteCommand:FireServer(capturedPlayer, cmd)
+                end
+                task.wait(0.2)
+            end
+        end)
+    end)
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        createPlayerButton(player)
+    end
+end
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        createPlayerButton(player)
     end
 end)
