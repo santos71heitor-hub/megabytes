@@ -1,4 +1,4 @@
--- Mgby V15 - Painel Admin + ESP Players + ESP Pets (Generation) + Auto Kick T
+-- Mgby V11 - Painel Admin + ESP Players + ESP Pets (Generation)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -11,11 +11,25 @@ local commands = {"rocket", "ragdoll", "balloon", "inverse", "nightvision", "jai
 
 -- Lista de pets para ESP
 local petsToShow = {
-    "Ketchuru and Musturu","Strawberry Elephant","Ketupat Kepat","La Supreme Combinasion",
-    "Tralaledon","Celularcini Viciosini","Los Noo My Hotspotsitos","Spaghetti Tualetti",
-    "Esok Sekolah","Los Hotspotsitos","Dragon Cannelloni","Chicleteira Bicicleteira",
-    "La Extinct Grande","Garama and Madundung","Nuclearo Dinossauro","Graipuss Medussi",
-    "Celularcini Viciosini","Los Combinasionas","La Grande Combinasion"
+    "Ketchuru and Musturu",
+    "Strawberry Elephant",
+    "Ketupat Kepat",
+    "La Supreme Combinasion",
+    "Tralaledon",
+    "Celularcini Viciosini",
+    "Los Noo My Hotspotsitos",
+    "Spaghetti Tualetti",
+    "Esok Sekolah",
+    "Los Hotspotsitos",
+    "Dragon Cannelloni",
+    "Chicleteira Bicicleteira",
+    "La Extinct Grande",
+    "Garama and Madundung",
+    "Nuclearo Dinossauro",
+    "Graipuss Medussi",
+    "Celularcini Viciosini",
+    "Los Combinasionas",
+    "La Grande Combinasion"
 }
 
 -- LocalPlayer e PlayerGui
@@ -32,7 +46,7 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AlwaysVisibleAdminPanel"
 screenGui.Parent = PlayerGui
 
--- Frame principal
+-- Frame principal centralizado
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0,250,0,450)
 frame.AnchorPoint = Vector2.new(0.5,0.5)
@@ -49,34 +63,43 @@ frameCorner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1,0,0,30)
 title.BackgroundTransparency = 1
-title.Text = "Mgby V15"
+title.Text = "Mgby V11"
 title.TextColor3 = Color3.fromRGB(144,238,144)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
--- Arrastável
+-- Tornar frame arrastável
 do
     local dragging, dragInput, mousePos, framePos
     local function update(input)
         local delta = input.Position - mousePos
         frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
     end
+
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             mousePos = input.Position
             framePos = frame.Position
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
             end)
         end
     end)
+
     frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
     end)
+
     UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then update(input) end
+        if input == dragInput and dragging then
+            update(input)
+        end
     end)
 end
 
@@ -101,7 +124,7 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 end)
 
 -- BOTÃO ESP JOGADORES
-local espEnabled = true
+local espEnabled = true -- ativado automaticamente
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
@@ -134,7 +157,7 @@ local function createPlayerESP(player)
         highlight.Parent = CoreGui
     end
 
-    -- Nome acima da cabeça
+    -- Nome acima da cabeça (branco com contorno preto)
     local head = char:FindFirstChild("Head")
     if head then
         local bb = Instance.new("BillboardGui")
@@ -148,12 +171,12 @@ local function createPlayerESP(player)
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,1,0)
         label.BackgroundTransparency = 1
-        label.TextColor3 = Color3.fromRGB(255,255,255) -- branco
-        label.TextStrokeTransparency = 0 -- contorno
-        label.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+        label.TextColor3 = Color3.fromRGB(255,255,255)  -- branco
+        label.TextStrokeTransparency = 0                  -- contorno visível
+        label.TextStrokeColor3 = Color3.fromRGB(0,0,0)   -- contorno preto
         label.Font = Enum.Font.GothamBold
         label.TextScaled = true
-        label.Text = player.Name
+        label.Text = player.Name -- username
         label.Parent = bb
 
         playerBillboards[player] = bb
@@ -185,7 +208,6 @@ updateAllPlayersESP()
 
 -- Atualiza quando entra um novo player
 Players.PlayerAdded:Connect(function(player)
-    createPlayerESP(player)
     player.CharacterAdded:Connect(function()
         createPlayerESP(player)
     end)
@@ -196,16 +218,15 @@ Players.PlayerRemoving:Connect(function(player)
     removePlayerESP(player)
 end)
 
+-- Atualização contínua
 RunService.Heartbeat:Connect(function()
-    if espEnabled then updateAllPlayersESP() end
+    updateAllPlayersESP()
 end)
 
 -- ============================
--- PAINEL ADMIN - BOTÕES
+-- BOTÕES DO PAINEL ADMIN
 -- ============================
-local playerButtons = {}
 local function createPlayerButton(targetPlayer)
-    if playerButtons[targetPlayer] then return end
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
     button.BackgroundColor3 = Color3.fromRGB(50,50,50)
@@ -219,38 +240,38 @@ local function createPlayerButton(targetPlayer)
     corner.CornerRadius = UDim.new(0,10)
     corner.Parent = button
 
+    local capturedPlayer = targetPlayer
     button.MouseButton1Click:Connect(function()
         task.spawn(function()
             for _, cmd in ipairs(commands) do
-                if ExecuteCommand then ExecuteCommand:FireServer(targetPlayer, cmd) end
+                if ExecuteCommand then
+                    ExecuteCommand:FireServer(capturedPlayer, cmd)
+                end
                 task.wait(0.2)
             end
         end)
     end)
-
-    playerButtons[targetPlayer] = button
-end
-
-local function removePlayerButton(player)
-    if playerButtons[player] then
-        playerButtons[player]:Destroy()
-        playerButtons[player] = nil
-    end
 end
 
 for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then createPlayerButton(player) end
+    if player ~= LocalPlayer then
+        createPlayerButton(player)
+    end
 end
 Players.PlayerAdded:Connect(function(player)
-    if player ~= LocalPlayer then createPlayerButton(player) end
+    if player ~= LocalPlayer then
+        createPlayerButton(player)
+    end
 end)
-Players.PlayerRemoving:Connect(removePlayerButton)
 
--- ============================
--- ESP PETS (GENERATION)
--- ============================
+-- =================================================
+-- ESP PETS (GENERATION) INTEGRADO COM A LISTA V4
+-- =================================================
 local targetNames = {}
-for _,petName in ipairs(petsToShow) do targetNames[petName] = true end
+for _,petName in ipairs(petsToShow) do
+    targetNames[petName] = true
+end
+
 local activeBillboards = {}
 
 local function parseNum(t)
@@ -278,13 +299,13 @@ local function criarBillboard(basePart,name,val,id)
         highlight.Parent = basePart
     end
 
-    local bb = Instance.new("BillboardGui",CoreGui)
-    bb.Size = UDim2.new(0,200,0,50)
-    bb.Adornee = basePart
-    bb.AlwaysOnTop = true
-    bb.StudsOffset = Vector3.new(0,4,0)
+    local bb=Instance.new("BillboardGui",CoreGui)
+    bb.Size=UDim2.new(0,200,0,50)
+    bb.Adornee=basePart
+    bb.AlwaysOnTop=true
+    bb.StudsOffset=Vector3.new(0,4,0)
 
-    local l1 = Instance.new("TextLabel",bb)
+    local l1=Instance.new("TextLabel",bb)
     l1.Size=UDim2.new(1,0,0.5,0)
     l1.BackgroundTransparency=1
     l1.TextColor3=Color3.fromRGB(255,255,0)
@@ -294,7 +315,7 @@ local function criarBillboard(basePart,name,val,id)
     l1.TextScaled = true
     l1.Text = name or "N/A"
 
-    local l2 = Instance.new("TextLabel",bb)
+    local l2=Instance.new("TextLabel",bb)
     l2.Size = UDim2.new(1,0,0.5,0)
     l2.Position = UDim2.new(0,0,0.5,0)
     l2.BackgroundTransparency = 1
@@ -319,9 +340,11 @@ RunService.Heartbeat:Connect(function()
                 end
                 parent = parent.Parent
             end
+
             if basePart then
                 local displayName = o.Parent:FindFirstChild("DisplayName")
                 local mobName = displayName and displayName.Text or "N/A"
+
                 if targetNames[mobName] then
                     criarBillboard(basePart, mobName, o.Text, basePart:GetDebugId())
                 end
@@ -334,8 +357,10 @@ end)
 -- Sair do servidor ao apertar T
 -- ============================
 UserInputService.InputBegan:Connect(function(input, processed)
-    if processed then return end
-    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.T then
-        LocalPlayer:Kick("$megabytes autokick")
+    if processed then return end -- ignora se já estiver processado
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == Enum.KeyCode.T then
+            LocalPlayer:Kick("$megabytes autokick")
+        end
     end
 end)
