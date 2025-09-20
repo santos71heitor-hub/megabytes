@@ -1,4 +1,4 @@
--- Mgby V9 - Painel Admin + ESP Players + ESP Pets (Generation)
+-- Mgby V9 - Painel Admin + ESP Players + ESP Pets (Generation) + melhorias
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
@@ -29,7 +29,9 @@ local petsToShow = {
     "Graipuss Medussi",
     "Celularcini Viciosini",
     "Los Combinasionas",
-    "La Grande Combinasion"
+    "La Grande Combinasion",
+    "Los Bros",
+    "Las Sis"
 }
 
 -- Espera LocalPlayer e PlayerGui
@@ -124,7 +126,7 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 end)
 
 -- BOTÃO ESP JOGADORES
-local playerESPEnabled = true
+local espEnabled = true -- ativado automaticamente
 local espButton = Instance.new("TextButton")
 espButton.Size = UDim2.new(0.9,0,0,30)
 espButton.Position = UDim2.new(0.05,0,0,35)
@@ -135,88 +137,43 @@ espButton.Font = Enum.Font.GothamBold
 espButton.TextScaled = true
 espButton.Parent = frame
 
--- Funções ESP Players
-local function createPlayerESP(char)
-    if not char then return end
-    if not char:FindFirstChild("ESP_Highlight") then
-        local highlight = Instance.new("Highlight")
-        highlight.Name = "ESP_Highlight"
-        highlight.Adornee = char
-        highlight.FillColor = Color3.fromRGB(0,162,255)
-        highlight.FillTransparency = 0.5
-        highlight.OutlineTransparency = 0.3
-        highlight.Parent = char
-    end
-    if not char:FindFirstChild("ESP_Billboard") then
-        local head = char:FindFirstChild("Head") or char:FindFirstChildWhichIsA("BasePart")
-        if head then
-            local bb = Instance.new("BillboardGui")
-            bb.Name = "ESP_Billboard"
-            bb.Adornee = head
-            bb.Size = UDim2.new(0,150,0,30)
-            bb.AlwaysOnTop = true
-            bb.StudsOffset = Vector3.new(0,2,0)
-
-            local label = Instance.new("TextLabel",bb)
-            label.Size = UDim2.new(1,0,1,0)
-            label.BackgroundTransparency = 1
-            label.TextColor3 = Color3.fromRGB(0,162,255)
-            label.TextStrokeTransparency = 0
-            label.TextStrokeColor3 = Color3.new(0,0,0)
-            label.Font = Enum.Font.GothamBold
-            label.TextScaled = true
-            label.Text = char.Name -- username
-            bb.Parent = CoreGui
-        end
-    end
+local function createHighlight(char)
+    if char:FindFirstChild("ESP_Highlight") then return end
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESP_Highlight"
+    highlight.Adornee = char
+    highlight.FillColor = Color3.fromRGB(0,0,255)
+    highlight.FillTransparency = 0.2
+    highlight.OutlineTransparency = 0.3
+    highlight.Parent = char
 end
 
-local function removePlayerESP(char)
-    local hl = char:FindFirstChild("ESP_Highlight")
-    if hl then hl:Destroy() end
-    local bb = char:FindFirstChild("ESP_Billboard")
-    if bb then bb:Destroy() end
+local function removeHighlight(char)
+    local highlight = char:FindFirstChild("ESP_Highlight")
+    if highlight then highlight:Destroy() end
 end
 
-local function updateAllPlayerESP()
+local function toggleESP()
+    espEnabled = not espEnabled
+    espButton.Text = espEnabled and "ESP ON" or "ESP OFF"
+    espButton.TextColor3 = espEnabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
+
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer and player.Character then
-            if playerESPEnabled then
-                createPlayerESP(player.Character)
-            else
-                removePlayerESP(player.Character)
-            end
+            if espEnabled then createHighlight(player.Character) else removeHighlight(player.Character) end
+            player.CharacterAdded:Connect(function(char)
+                if espEnabled then createHighlight(char) end
+            end)
         end
     end
 end
-
--- Conectar novos jogadores e personagens
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function(char)
-        if playerESPEnabled then createPlayerESP(char) end
-    end)
-end)
-
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        player.CharacterAdded:Connect(function(char)
-            if playerESPEnabled then createPlayerESP(char) end
-        end)
-        if player.Character then
-            createPlayerESP(player.Character)
-        end
-    end
-end
-
-espButton.MouseButton1Click:Connect(function()
-    playerESPEnabled = not playerESPEnabled
-    espButton.Text = playerESPEnabled and "ESP ON" or "ESP OFF"
-    espButton.TextColor3 = playerESPEnabled and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
-    updateAllPlayerESP()
-end)
+espButton.MouseButton1Click:Connect(toggleESP)
 
 -- Criação de botões para players
+local playerButtons = {} -- guarda referência para remover
 local function createPlayerButton(targetPlayer)
+    if playerButtons[targetPlayer] then return end -- evita duplicação
+
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0.9,0,0,30)
     button.BackgroundColor3 = Color3.fromRGB(50,50,50)
@@ -229,6 +186,8 @@ local function createPlayerButton(targetPlayer)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0,10)
     corner.Parent = button
+
+    playerButtons[targetPlayer] = button
 
     local capturedPlayer = targetPlayer
     button.MouseButton1Click:Connect(function()
@@ -243,15 +202,32 @@ local function createPlayerButton(targetPlayer)
     end)
 end
 
+local function removePlayerButton(player)
+    if playerButtons[player] then
+        playerButtons[player]:Destroy()
+        playerButtons[player] = nil
+    end
+end
+
+-- Adiciona automaticamente quando entra
 for _, player in ipairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         createPlayerButton(player)
+        if espEnabled and player.Character then createHighlight(player.Character) end
     end
 end
+
 Players.PlayerAdded:Connect(function(player)
     if player ~= LocalPlayer then
         createPlayerButton(player)
+        player.CharacterAdded:Connect(function(char)
+            if espEnabled then createHighlight(char) end
+        end)
     end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    removePlayerButton(player)
 end)
 
 -- =================================================
@@ -296,12 +272,12 @@ local function criarPetBillboard(basePart,name,val,id)
     bb.StudsOffset=Vector3.new(0,4,0)
 
     local l1=Instance.new("TextLabel",bb)
-    l1.Size=UDim2.new(1,0,0.5,0)
-    l1.BackgroundTransparency=1
-    l1.TextColor3=Color3.fromRGB(255,255,0)
-    l1.TextStrokeTransparency=0
-    l1.TextStrokeColor3=Color3.new(0,0,0)
-    l1.Font=Enum.Font.GothamBold
+    l1.Size = UDim2.new(1,0,0.5,0)
+    l1.BackgroundTransparency = 1
+    l1.TextColor3 = Color3.fromRGB(255,255,0)
+    l1.TextStrokeTransparency = 0
+    l1.TextStrokeColor3 = Color3.new(0,0,0)
+    l1.Font = Enum.Font.GothamBold
     l1.TextScaled = true
     l1.Text = name or "N/A"
 
@@ -319,6 +295,7 @@ local function criarPetBillboard(basePart,name,val,id)
     activePetBillboards[id] = bb
 end
 
+-- Loop para atualizar ESP pets
 RunService.Heartbeat:Connect(function()
     for _,o in ipairs(Workspace:GetDescendants()) do
         if o:IsA("TextLabel") and o.Name == "Generation" and not o.Text:lower():find("fusing") then
@@ -340,5 +317,15 @@ RunService.Heartbeat:Connect(function()
                 end
             end
         end
+    end
+end)
+
+-- =================================================
+-- Sair do servidor ao apertar T
+-- =================================================
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.T then
+        LocalPlayer:Kick("Mgbytes Autokick")
     end
 end)
