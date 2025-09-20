@@ -139,7 +139,7 @@ local function createPlayerESP(player)
         local highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
         highlight.Adornee = char
-        highlight.FillColor = Color3.fromRGB(255,255,255)
+        highlight.FillColor = Color3.fromRGB(192,192,192)
         highlight.FillTransparency = 0.4
         highlight.OutlineColor = Color3.fromRGB(0,0,0)
         highlight.OutlineTransparency = 0.2
@@ -162,7 +162,7 @@ local function createPlayerESP(player)
         label.BackgroundTransparency = 1
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.TextStrokeTransparency = 0
-        label.TextStrokeColor3 = Color3.new(0,0,0)
+        label.TextStrokeColor3 = Color3.new(255,255,255)
         label.Font = Enum.Font.GothamBold
         label.TextScaled = true
         label.Text = player.Name -- username
