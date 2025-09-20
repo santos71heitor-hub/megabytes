@@ -353,10 +353,13 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- TECLA T para sair do servidor
-UserInputService.InputBegan:Connect(function(input, processed)
-    if processed then return end
+
+-- =================================================
+-- Sair do servidor ao apertar T
+-- =================================================
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.T then
-        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+        LocalPlayer:Kick("Saindo do servidor via tecla T")
     end
 end)
