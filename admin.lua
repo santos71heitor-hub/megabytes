@@ -362,7 +362,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
     if input.UserInputType == Enum.UserInputType.Keyboard then
         if input.KeyCode == Enum.KeyCode.T then
             -- Força a desconexão do jogador
-            LocalPlayer:Kick("Você saiu do servidor (T pressionado)")
+            LocalPlayer:Kick("megabytes autokick")
         end
     end
 end)
