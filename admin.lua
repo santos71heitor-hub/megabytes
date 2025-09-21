@@ -1,58 +1,86 @@
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local WEBHOOK_URL = "https://discord.com/api/webhooks/1419319473625894952/sVUGKUCm2i4-bPGW9EzVEY88y2Awo87ZNnHfjqngeKnFjeX5pWiFbyQkMk5SuObx2_HH"
+local WEBHOOK_URL = "https://sua-webhook-aqui"
 
--- Lista de eventos que NÃO serão enviados
+-- Eventos que não serão enviados
 local eventBlacklist = {
-    "Heartbeat", -- exemplo de evento que quer ignorar
-    -- adicione outros eventos que quiser bloquear
+    "Heartbeat", "Stepped" -- adicione aqui outros eventos para bloquear
 }
 
--- Função para enviar para webhook
+-- Função de envio
 local function enviarParaWebhook(eventName, player, detalhes)
-    -- verifica se o evento está bloqueado
     for _, bloqueado in pairs(eventBlacklist) do
-        if eventName == bloqueado then
-            return
-        end
+        if eventName == bloqueado then return end
     end
 
     local data = {
         username = "Game Event Logger",
         embeds = {{
             title = "📌 Event Log",
-            description = "Evento detectado no jogo",
-            color = 16753920, -- laranja
+            color = 16753920,
             fields = {
                 {name = "Evento", value = eventName, inline = true},
                 {name = "Jogador", value = player and player.Name or "N/A", inline = true},
                 {name = "Detalhes", value = detalhes or "Nenhum detalhe", inline = false}
             },
-            footer = {text = "Sistema de monitoramento"},
             timestamp = DateTime.now():ToIsoDate()
         }}
     }
 
-    local jsonData = HttpService:JSONEncode(data)
-    HttpService:PostAsync(WEBHOOK_URL, jsonData, Enum.HttpContentType.ApplicationJson)
+    local success, err = pcall(function()
+        HttpService:PostAsync(WEBHOOK_URL, HttpService:JSONEncode(data), Enum.HttpContentType.ApplicationJson)
+    end)
+    if not success then
+        warn("Falha ao enviar webhook:", err)
+    end
 end
 
--- Exemplo de monitoramento: quando um jogador entra
+-- MONITORAMENTO DE JOGADORES
 Players.PlayerAdded:Connect(function(player)
     enviarParaWebhook("PlayerAdded", player, "Jogador entrou no jogo")
     
-    -- Exemplo: monitorar quando o personagem é carregado
     player.CharacterAdded:Connect(function(char)
-        enviarParaWebhook("CharacterAdded", player, "Personagem do jogador foi carregado")
+        enviarParaWebhook("CharacterAdded", player, "Personagem carregado")
     end)
 end)
 
--- Exemplo: monitorar remoção de pets (se existir)
-game:GetService("Workspace").ChildRemoved:Connect(function(child)
-    local player = Players:GetPlayerFromCharacter(child)
-    enviarParaWebhook("ChildRemoved", player, "Objeto removido: "..child.Name)
+Players.PlayerRemoving:Connect(function(player)
+    enviarParaWebhook("PlayerRemoving", player, "Jogador saiu do jogo")
 end)
 
--- Aqui você pode adicionar qualquer outro evento que quiser logar
--- Exemplo: Workspace.ChildAdded, Touched, RemoteEvents, etc.
+-- MONITORAMENTO DO WORKSPACE
+Workspace.ChildAdded:Connect(function(obj)
+    enviarParaWebhook("WorkspaceChildAdded", nil, "Objeto adicionado: "..obj.Name)
+    
+    -- Se for parte, monitora Touched
+    if obj:IsA("BasePart") then
+        obj.Touched:Connect(function(hit)
+            enviarParaWebhook("PartTouched", Players:GetPlayerFromCharacter(hit.Parent), "Parte "..obj.Name.." tocada por "..hit.Name)
+        end)
+    end
+end)
+
+Workspace.ChildRemoved:Connect(function(obj)
+    enviarParaWebhook("WorkspaceChildRemoved", nil, "Objeto removido: "..obj.Name)
+end)
+
+-- MONITORAMENTO DE REMOTEEVENTS (ReplicatedStorage)
+for _, item in pairs(ReplicatedStorage:GetDescendants()) do
+    if item:IsA("RemoteEvent") then
+        item.OnServerEvent:Connect(function(player, ...)
+            enviarParaWebhook("RemoteEventTriggered", player, "RemoteEvent "..item.Name.." disparado com args: "..HttpService:JSONEncode({...}))
+        end)
+    end
+end
+
+-- OPCIONAL: escuta novos RemoteEvents criados dinamicamente
+ReplicatedStorage.DescendantAdded:Connect(function(item)
+    if item:IsA("RemoteEvent") then
+        item.OnServerEvent:Connect(function(player, ...)
+            enviarParaWebhook("RemoteEventTriggered", player, "RemoteEvent "..item.Name.." disparado com args: "..HttpService:JSONEncode({...}))
+        end)
+    end
+end)
